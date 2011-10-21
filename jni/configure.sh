@@ -17,8 +17,8 @@ export PATH="$TOOLCHAIN/bin:$PATH"
 export NDK_BUILD="yes"
 
 
-rm -rf build/ffmpeg
-mkdir -p build/ffmpeg
+#rm -rf build/ffmpeg
+#mkdir -p build/ffmpeg
 cd ffmpeg
 
 # Don't build any neon version for now
@@ -27,20 +27,23 @@ for version in $TARGET_ARCHS; do
 	DEST=../build/ffmpeg
 	FLAGS="--target-os=$TARGET_OS --cross-prefix=$ARCH-$TARGET_OS-androideabi- --arch=$ARCH  --enable-cross-compile"
 	FLAGS="$FLAGS --sysroot=$SYSROOT "
-	#FLAGS="$FLAGS --soname-prefix=/data/data/com.bambuser.broadcaster/lib/"
-	FLAGS="$FLAGS  --disable-everything --disable-doc --disable-asm --disable-yasm --disable-symver" #
-	FLAGS="$FLAGS --enable-shared --disable-static"
+	#FLAGS="$FLAGS --soname-prefix=/data/data/org.fpl/lib/"
+	FLAGS="$FLAGS --disable-everything --disable-doc --disable-asm --disable-yasm --disable-symver" #
+	FLAGS="$FLAGS --enable-shared"
+	FLAGS="$FLAGS --nm=$TOOLCHAIN/bin/$ARCH-$TARGET_OS-androideabi-nm"
+	#FLAGS="$FLAGS -Wl,-T"
 	FLAGS="$FLAGS --enable-ffmpeg --enable-ffplay --enable-ffprobe --enable-avdevice"
 	FLAGS="$FLAGS --enable-small" #--optimization-flags=-O2
 	FLAGS="$FLAGS --enable-zlib"
-	#FLAGS="$FLAGS --enable-encoder=msmpeg4v3 --enable-encoder=nellymoser "
+	FLAGS="$FLAGS --enable-encoder=msmpeg4v3 --enable-encoder=nellymoser "
     FLAGS="$FLAGS --enable-decoder=mp3 "
 	FLAGS="$FLAGS --enable-protocol=http --enable-protocol=rtmp --enable-protocol=tcp --enable-network "
 	FLAGS="$FLAGS --enable-outdev=alsa --enable-outdev=sndio --enable-outdev=sdl --enable-outdev=oss"
 	FLAGS="$FLAGS --enable-muxer=mp3 --enable-demuxer=mp3 "
     FLAGS="$FLAGS --enable-indev=alsa "
     FLAGS="$FLAGS --enable-parser=mpegaudio "
-    FLAGS="$FLAGS --enable-bsf=mp3_header_decompress "
+    FLAGS="$FLAGS --enable-bsf=mp3_header_decompress"
+    
     
 
 	case "$version" in

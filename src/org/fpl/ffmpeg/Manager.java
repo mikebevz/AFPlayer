@@ -4,7 +4,6 @@ import android.media.AudioTrack;
 
 public class Manager {
 	static {
-		System.loadLibrary("ffmpeg"); 
 		System.loadLibrary("player");
 	}
 	

@@ -1,0 +1,390 @@
+diff -uNr ffmpeg/av.mk ffmpeg.old/av.mk
+--- ffmpeg/av.mk	1970-01-01 01:00:00.000000000 +0100
++++ ffmpeg.old/av.mk	2011-10-20 13:47:04.000000000 +0200
+@@ -0,0 +1,36 @@
++# LOCAL_PATH is one of libavutil, libavcodec, libavformat, or libswscale
++
++
++include $(LOCAL_PATH)/../config.mak
++
++OBJS :=
++OBJS-yes :=
++MMX-OBJS-yes :=
++include $(LOCAL_PATH)/Makefile
++
++# collect objects
++OBJS-$(HAVE_MMX) += $(MMX-OBJS-yes)
++OBJS += $(OBJS-yes)
++
++FFNAME := lib$(NAME)
++FFLIBS := $(foreach,NAME,$(FFLIBS),lib$(NAME))
++
++FFCFLAGS  = -DHAVE_AV_CONFIG_H -Wno-sign-compare -Wno-switch -Wno-pointer-sign
++FFCFLAGS += -DTARGET_CONFIG=\"config-$(TARGET_ARCH).h\"
++
++ALL_S_FILES := $(wildcard $(LOCAL_PATH)/$(TARGET_ARCH)/*.S)
++ALL_S_FILES := $(addprefix $(TARGET_ARCH)/, $(notdir $(ALL_S_FILES)))
++
++ifneq ($(ALL_S_FILES),)
++ALL_S_OBJS := $(patsubst %.S,%.o,$(ALL_S_FILES))
++C_OBJS := $(filter-out $(ALL_S_OBJS),$(OBJS))
++S_OBJS := $(filter $(ALL_S_OBJS),$(OBJS))
++else
++C_OBJS := $(OBJS)
++S_OBJS :=
++endif
++
++C_FILES := $(patsubst %.o,%.c,$(C_OBJS))
++S_FILES := $(patsubst %.o,%.S,$(S_OBJS))
++
++FFFILES := $(sort $(S_FILES)) $(sort $(C_FILES))
+
+diff -uNr ffmpeg/configure ffmpeg.old/configure
+--- ffmpeg/configure	2011-10-21 15:47:11.000000000 +0200
++++ ffmpeg.old/configure	2011-10-21 15:38:23.000000000 +0200
+@@ -2622,12 +2622,12 @@
+ void foo(void) { __asm__ volatile ("" ::); }
+ EOF
+ 
+-_restrict=
+-for restrict_keyword in restrict __restrict__ __restrict; do
+-    check_cc <<EOF && _restrict=$restrict_keyword && break
+-void foo(char * $restrict_keyword p);
+-EOF
+-done
++_restrict=""
++#for restrict_keyword in restrict __restrict__ __restrict; do
++#    check_cc <<EOF && _restrict=$restrict_keyword && break
++#void foo(char * $restrict_keyword p);
++#EOF
++#done
+ 
+ check_cc <<EOF && enable attribute_packed
+ struct { int x; } __attribute__((packed)) x;
+
+diff -uNr ffmpeg/libavcodec/Makefile ffmpeg.old/libavcodec/Makefile
+--- ffmpeg/libavcodec/Makefile	2011-10-21 15:47:11.000000000 +0200
++++ ffmpeg.old/libavcodec/Makefile	2011-10-21 11:16:32.000000000 +0200
+@@ -1,4 +1,6 @@
++ifndef NDK_BUILD  
+ include $(SUBDIR)../config.mak
++endif
+ 
+ NAME = avcodec
+ FFLIBS = avutil
+@@ -695,7 +697,9 @@
+ 
+ CLEANFILES = *_tables.c *_tables.h *_tablegen$(HOSTEXESUF)
+ 
++ifndef NDK_BUILD  
+ include $(SUBDIR)../subdir.mak
++endif
+ 
+ $(SUBDIR)dct-test$(EXESUF): $(SUBDIR)dctref.o
+
+
+diff -uNr ffmpeg/libavformat/Makefile ffmpeg.old/libavformat/Makefile
+--- ffmpeg/libavformat/Makefile	2011-10-21 15:47:11.000000000 +0200
++++ ffmpeg.old/libavformat/Makefile	2011-10-21 11:18:28.000000000 +0200
+@@ -1,4 +1,6 @@
++ifndef NDK_BUILD  
+ include $(SUBDIR)../config.mak
++endif
+ 
+ NAME = avformat
+ FFLIBS = avcodec avutil
+@@ -342,4 +344,6 @@
+ 
+ TESTPROGS = timefilter
+ 
++ifndef NDK_BUILD  
+ include $(SUBDIR)../subdir.mak
++endif
+\ No newline at end of file
+
+diff -uNr ffmpeg/libavutil/Makefile ffmpeg.old/libavutil/Makefile
+--- ffmpeg/libavutil/Makefile	2011-10-21 15:47:12.000000000 +0200
++++ ffmpeg.old/libavutil/Makefile	2011-10-21 11:18:54.000000000 +0200
+@@ -1,4 +1,6 @@
++ifndef NDK_BUILD  
+ include $(SUBDIR)../config.mak
++endif
+ 
+ NAME = avutil
+ 
+@@ -84,6 +86,8 @@
+ 
+ ARCH_HEADERS = bswap.h intmath.h intreadwrite.h timer.h
+ 
++ifndef NDK_BUILD  
+ include $(SUBDIR)../subdir.mak
++endif
+ 
+ $(SUBDIR)lzo-test$(EXESUF): ELIBS = -llzo2
+
+
+diff -uNr ffmpeg/libpostproc/Makefile ffmpeg.old/libpostproc/Makefile
+--- ffmpeg/libpostproc/Makefile	2011-10-21 15:47:12.000000000 +0200
++++ ffmpeg.old/libpostproc/Makefile	2011-10-21 11:19:15.000000000 +0200
+@@ -1,4 +1,6 @@
++ifndef NDK_BUILD  
+ include $(SUBDIR)../config.mak
++endif
+
+ NAME = postproc
+ FFLIBS = avutil
+@@ -7,4 +9,6 @@
+
+ OBJS = postprocess.o
+
++ifndef NDK_BUILD  
+ include $(SUBDIR)../subdir.mak
++endif
+\ No newline at end of file
+diff -uNr ffmpeg/libswscale/Makefile ffmpeg.old/libswscale/Makefile
+--- ffmpeg/libswscale/Makefile	2011-10-21 15:47:12.000000000 +0200
++++ ffmpeg.old/libswscale/Makefile	2011-10-21 11:19:34.000000000 +0200
+@@ -1,4 +1,6 @@
++ifndef NDK_BUILD  
+ include $(SUBDIR)../config.mak
++endif
+
+ NAME = swscale
+ FFLIBS = avutil
+@@ -26,4 +28,6 @@
+
+ DIRS = bfin mlib ppc sparc x86
+
++ifndef NDK_BUILD  
+ include $(SUBDIR)../subdir.mak
++endif
+\ No newline at end of file
+
+diff -uNr ffmpeg/libavdevice/Makefile ffmpeg.old/libavdevice/Makefile
+--- ffmpeg/libavdevice/Makefile	2011-10-21 19:27:52.000000000 +0200
++++ ffmpeg.old/libavdevice/Makefile	2011-10-21 19:24:23.000000000 +0200
+@@ -1,4 +1,6 @@
++ifndef NDK_BUILD
+ include $(SUBDIR)../config.mak
++endif
+ 
+ NAME    = avdevice
+ FFLIBS  = avformat avcodec avutil
+@@ -35,4 +37,6 @@
+ SKIPHEADERS-$(HAVE_ALSA_ASOUNDLIB_H)     += alsa-audio.h
+ SKIPHEADERS-$(HAVE_SNDIO_H)              += sndio_common.h
+ 
++ifndef NDK_BUILD
+ include $(SUBDIR)../subdir.mak
++endif
+\ No newline at end of file
+
+diff -uNr ffmpeg/libavfilter/Makefile ffmpeg.old/libavfilter/Makefile
+--- ffmpeg/libavfilter/Makefile	2011-10-21 19:27:52.000000000 +0200
++++ ffmpeg.old/libavfilter/Makefile	2011-10-21 19:24:43.000000000 +0200
+@@ -1,4 +1,6 @@
++ifndef NDK_BUILD
+ include $(SUBDIR)../config.mak
++endif
+ 
+ NAME = avfilter
+ FFLIBS = avutil
+@@ -140,4 +142,6 @@
+ 
+ DIRS = x86 libmpcodecs
+ 
++ifndef NDK_BUILD
+ include $(SUBDIR)../subdir.mak
++endif
+\ No newline at end of file
+
+diff -uNr /Users/mikebevz/Android/PlayerProject/src/ffmpeg-0.8.5/Android.mk ./ffmpeg/Android.mk
+--- ffmpeg/Android.mk   1970-01-01 01:00:00.000000000 +0100
++++ ffmpeg/Android.mk 2011-10-21 19:03:00.000000000 +0200
+@@ -0,0 +1,16 @@
++LOCAL_PATH := $(call my-dir)
++include $(call all-subdir-makefiles)
++include $(CLEAR_VARS) 
++
++LOCAL_MODULE := ffmpeg
++# LOCAL_SRC_FILES := ffmpeg.c ffplay.c
++
++LOCAL_STATIC_LIBRARIES := libavformat libavcodec libavutil libpostproc libswscale 
++LOCAL_EXPORT_C_INCLUDES := $(LOCAL_PATH)/includes
++#LOCAL_JNI_SHARED_LIBRARIES := libffmpeg
++include $(BUILD_SHARED_LIBRARY) 
++
++
++
++
++ 
+
+diff -uNr ffmpeg/libavcodec/Android.mk ffmpeg.old/libavcodec/Android.mk
+--- ffmpeg/libavcodec/Android.mk    1970-01-01 01:00:00.000000000 +0100
++++ ffmpeg.old/libavcodec/Android.mk    2011-10-21 18:21:59.000000000 +0200
+@@ -0,0 +1,20 @@
++LOCAL_PATH := $(call my-dir)
++include $(CLEAR_VARS)
++
++include $(LOCAL_PATH)/../av.mk
++
++LOCAL_SRC_FILES := $(FFFILES)
++
++LOCAL_C_INCLUDES :=        \
++   $(LOCAL_PATH)       \
++   $(LOCAL_PATH)/..    \
++   external/zlib
++
++LOCAL_CFLAGS += $(FFCFLAGS)
++
++LOCAL_SHARED_LIBRARIES := libz
++LOCAL_STATIC_LIBRARIES := $(FFLIBS)
++
++LOCAL_MODULE := $(FFNAME)
++
++include $(BUILD_STATIC_LIBRARY)
+
+diff -uNr ffmpeg/libavdevice/Android.mk ffmpeg.old/libavdevice/Android.mk
+--- ffmpeg/libavdevice/Android.mk   1970-01-01 01:00:00.000000000 +0100
++++ ffmpeg.old/libavdevice/Android.mk   2011-10-21 18:23:23.000000000 +0200
+@@ -0,0 +1,18 @@
++LOCAL_PATH := $(call my-dir)
++include $(CLEAR_VARS)
++
++include $(LOCAL_PATH)/../av.mk
++
++LOCAL_SRC_FILES := $(FFFILES)
++
++LOCAL_C_INCLUDES :=        \
++   $(LOCAL_PATH)       \
++   $(LOCAL_PATH)/..
++
++LOCAL_CFLAGS += $(FFCFLAGS)
++
++LOCAL_STATIC_LIBRARIES := $(FFLIBS)
++
++LOCAL_MODULE := $(FFNAME)
++
++include $(BUILD_STATIC_LIBRARY)
+
+diff -uNr ffmpeg/libavfilter/Android.mk ffmpeg.old/libavfilter/Android.mk
+--- ffmpeg/libavfilter/Android.mk   1970-01-01 01:00:00.000000000 +0100
++++ ffmpeg.old/libavfilter/Android.mk   2011-10-21 18:23:23.000000000 +0200
+@@ -0,0 +1,18 @@
++LOCAL_PATH := $(call my-dir)
++include $(CLEAR_VARS)
++
++include $(LOCAL_PATH)/../av.mk
++
++LOCAL_SRC_FILES := $(FFFILES)
++
++LOCAL_C_INCLUDES :=        \
++   $(LOCAL_PATH)       \
++   $(LOCAL_PATH)/..
++
++LOCAL_CFLAGS += $(FFCFLAGS)
++
++LOCAL_STATIC_LIBRARIES := $(FFLIBS)
++
++LOCAL_MODULE := $(FFNAME)
++
++include $(BUILD_STATIC_LIBRARY)
+
+diff -uNr ffmpeg/libavformat/Android.mk ffmpeg.old/libavformat/Android.mk
+--- ffmpeg/libavformat/Android.mk   1970-01-01 01:00:00.000000000 +0100
++++ ffmpeg.old/libavformat/Android.mk   2011-10-21 18:24:39.000000000 +0200
+@@ -0,0 +1,22 @@
++LOCAL_PATH := $(call my-dir)
++
++include $(CLEAR_VARS)
++
++include $(LOCAL_PATH)/../av.mk
++
++LOCAL_SRC_FILES := $(FFFILES)
++
++LOCAL_C_INCLUDES :=        \
++   $(LOCAL_PATH)       \
++   $(LOCAL_PATH)/..    \
++   external/zlib
++
++LOCAL_CFLAGS += $(FFCFLAGS)
++LOCAL_CFLAGS += -include "string.h" -Dipv6mr_interface=ipv6mr_ifindex
++
++LOCAL_SHARED_LIBRARIES := libz
++LOCAL_STATIC_LIBRARIES := $(FFLIBS)
++
++LOCAL_MODULE := $(FFNAME)
++
++include $(BUILD_STATIC_LIBRARY)
+
+diff -uNr ffmpeg/libavutil/Android.mk ffmpeg.old/libavutil/Android.mk
+--- ffmpeg/libavutil/Android.mk 1970-01-01 01:00:00.000000000 +0100
++++ ffmpeg.old/libavutil/Android.mk 2011-10-21 18:24:48.000000000 +0200
+@@ -0,0 +1,18 @@
++LOCAL_PATH := $(call my-dir)
++include $(CLEAR_VARS)
++
++include $(LOCAL_PATH)/../av.mk
++
++LOCAL_SRC_FILES := $(FFFILES)
++
++LOCAL_C_INCLUDES :=        \
++   $(LOCAL_PATH)       \
++   $(LOCAL_PATH)/..
++
++LOCAL_CFLAGS += $(FFCFLAGS)
++
++LOCAL_STATIC_LIBRARIES := $(FFLIBS)
++
++LOCAL_MODULE := $(FFNAME)
++
++include $(BUILD_STATIC_LIBRARY)
+
+diff -uNr ffmpeg/libpostproc/Android.mk ffmpeg.old/libpostproc/Android.mk
+--- ffmpeg/libpostproc/Android.mk   1970-01-01 01:00:00.000000000 +0100
++++ ffmpeg.old/libpostproc/Android.mk   2011-10-21 18:24:56.000000000 +0200
+@@ -0,0 +1,18 @@
++LOCAL_PATH := $(call my-dir)
++include $(CLEAR_VARS)
++
++include $(LOCAL_PATH)/../av.mk
++
++LOCAL_SRC_FILES := $(FFFILES)
++
++LOCAL_C_INCLUDES :=        \
++   $(LOCAL_PATH)       \
++   $(LOCAL_PATH)/..
++
++LOCAL_CFLAGS += $(FFCFLAGS)
++
++LOCAL_STATIC_LIBRARIES := $(FFLIBS)
++
++LOCAL_MODULE := $(FFNAME)
++
++include $(BUILD_STATIC_LIBRARY)
+
+
+diff -uNr ffmpeg/libswscale/Android.mk ffmpeg.old/libswscale/Android.mk
+--- ffmpeg/libswscale/Android.mk    1970-01-01 01:00:00.000000000 +0100
++++ ffmpeg.old/libswscale/Android.mk    2011-10-21 18:25:03.000000000 +0200
+@@ -0,0 +1,18 @@
++LOCAL_PATH := $(call my-dir)
++include $(CLEAR_VARS)
++
++include $(LOCAL_PATH)/../av.mk
++
++LOCAL_SRC_FILES := $(FFFILES)
++
++LOCAL_C_INCLUDES :=        \
++   $(LOCAL_PATH)       \
++   $(LOCAL_PATH)/..
++
++LOCAL_CFLAGS += $(FFCFLAGS)
++
++LOCAL_STATIC_LIBRARIES := $(FFLIBS)
++
++LOCAL_MODULE := $(FFNAME)
++
++include $(BUILD_STATIC_LIBRARY)
+ 
+

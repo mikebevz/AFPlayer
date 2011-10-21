@@ -3,10 +3,10 @@
       package="org.fpl"
       android:versionCode="1"
       android:versionName="1.0">
-    <uses-sdk android:minSdkVersion="3" />
+    <uses-sdk android:minSdkVersion="3"/>
 
     <application android:icon="@drawable/icon" android:label="@string/app_name">
-        <activity android:name=".FPlayerActivity"
+        <activity android:name="org.fpl.FPlayerActivity"
                   android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
