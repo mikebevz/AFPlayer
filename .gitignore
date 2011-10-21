@@ -1,0 +1,7 @@
+jni/build
+jni/includes
+jni/ffmpeg
+obj
+.settings/
+bin/
+local.properties
