@@ -28,8 +28,9 @@ for version in $TARGET_ARCHS; do
 	FLAGS="--target-os=$TARGET_OS --cross-prefix=$ARCH-$TARGET_OS-androideabi- --arch=$ARCH  --enable-cross-compile"
 	FLAGS="$FLAGS --sysroot=$SYSROOT "
 	#FLAGS="$FLAGS --soname-prefix=/data/data/com.bambuser.broadcaster/lib/"
-	FLAGS="$FLAGS --disable-everything --disable-doc --disable-asm --disable-yasm --disable-symver"
-	FLAGS="$FLAGS --enable-shared --enable-ffmpeg --enable-ffplay --enable-ffprobe --enable-avdevice"
+	FLAGS="$FLAGS  --disable-everything --disable-doc --disable-asm --disable-yasm --disable-symver" #
+	FLAGS="$FLAGS --enable-shared --disable-static"
+	FLAGS="$FLAGS --enable-ffmpeg --enable-ffplay --enable-ffprobe --enable-avdevice"
 	FLAGS="$FLAGS --enable-small" #--optimization-flags=-O2
 	FLAGS="$FLAGS --enable-zlib"
 	#FLAGS="$FLAGS --enable-encoder=msmpeg4v3 --enable-encoder=nellymoser "
@@ -41,7 +42,6 @@ for version in $TARGET_ARCHS; do
     FLAGS="$FLAGS --enable-parser=mpegaudio "
     FLAGS="$FLAGS --enable-bsf=mp3_header_decompress "
     
-	
 
 	case "$version" in
 		neon)
