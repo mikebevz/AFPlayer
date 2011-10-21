@@ -3,3 +3,14 @@ version 0.0.1
 
 This project is intented to build ffmpeg based player for Android.
 
+
+Thanks for inspiration to
+
+- http://bambuser.com/opensource
+- http://abitno.me/compile-ffmpeg-android-ndk
+- http://abitno.me/a-simple-tutorial-to-jni
+- http://abitno.me/a-simple-tutorial-to-android-ndk
+- https://github.com/havlenapetr/FFMpeg
+- http://www.android-dev.ro/2011/06/14/compiling-ffmpeg-on-android/
+
+
