@@ -27,7 +27,7 @@ for version in $TARGET_ARCHS; do
 	DEST=../build/ffmpeg
 	FLAGS="--target-os=$TARGET_OS --cross-prefix=$ARCH-$TARGET_OS-androideabi- --arch=$ARCH  --enable-cross-compile"
 	FLAGS="$FLAGS --sysroot=$SYSROOT "
-	#FLAGS="$FLAGS --soname-prefix=/data/data/org.fpl/lib/"
+	#git FLAGS="$FLAGS --soname-prefix=/data/data/org.fpl/lib/"
 	FLAGS="$FLAGS --disable-everything --disable-doc --disable-asm --disable-yasm --disable-symver" #
 	FLAGS="$FLAGS --enable-shared"
 	FLAGS="$FLAGS --nm=$TOOLCHAIN/bin/$ARCH-$TARGET_OS-androideabi-nm"
@@ -36,11 +36,15 @@ for version in $TARGET_ARCHS; do
 	FLAGS="$FLAGS --enable-small" #--optimization-flags=-O2
 	FLAGS="$FLAGS --enable-zlib"
 	FLAGS="$FLAGS --enable-encoder=msmpeg4v3 --enable-encoder=nellymoser "
-    FLAGS="$FLAGS --enable-decoder=mp3 "
+    FLAGS="$FLAGS --enable-decoder=mp3 --enable-decoder=mp3adu --enable-decoder=mp3adufloat \
+                  --enable-decoder=mp3float --enable-decoder=mp3on4 --enable-decoder=mp3on4float"
 	FLAGS="$FLAGS --enable-protocol=http --enable-protocol=rtmp --enable-protocol=tcp --enable-network "
 	FLAGS="$FLAGS --enable-outdev=alsa --enable-outdev=sndio --enable-outdev=sdl --enable-outdev=oss"
-	FLAGS="$FLAGS --enable-muxer=mp3 --enable-demuxer=mp3 "
-    FLAGS="$FLAGS --enable-indev=alsa "
+	FLAGS="$FLAGS --enable-muxer=mp3 --enable-muxer=wav --enable-demuxer=mp3 --enable-demuxer=wav"
+    FLAGS="$FLAGS --enable-indev=alsa --enable-indev=bktr --enable-indev=dv1394 --enable-indev=jack \
+                  --enable-indev=v412 --enable-indev=libdc1394 --enable-indev=vfcap --enable-indev=vfwcap \
+                  --enable-indev=dshow --enable-indev=oss --enable-indev=x11_grab_device \
+                  --enable-indev=dv1394 --enable-indev=sndio --enable-indev=fbdev --enable-indev=v4l"
     FLAGS="$FLAGS --enable-parser=mpegaudio "
     FLAGS="$FLAGS --enable-bsf=mp3_header_decompress"
     
