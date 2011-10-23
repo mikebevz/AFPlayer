@@ -1,5 +1,11 @@
 #!/bin/bash
 
+if [ "$NDK" = "" ]; then
+	echo NDK variable not set, assuming ${HOME}/android-ndk
+	export NDK=${HOME}/android-ndk
+fi
+
+
 FFMPEG_VERSION="0.8.5"
 FFMPEG_FILE="ffmpeg-$FFMPEG_VERSION.tar.gz"
 FFMPEG_URL="http://ffmpeg.org/releases/$FFMPEG_FILE"

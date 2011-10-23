@@ -3,6 +3,29 @@ version 0.0.1
 
 This project is intented to build ffmpeg based player for Android.
 
+- Building ffmpeg for Android
+ -
+Make sure that you have environment variable ANDROID_HOME pointing to Android SDK, and NDK pointing to Android Native SDK.
+Then add them on your system path so you can work comfortably. Add the following line to ~/.bashrc or ~/.bash_profile, depending on your system
+
+# export $NDK:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$PATH
+
+Now get the source code
+
+# git clone git@github.com:mikebevz/AFPlayer.git
+# cd AFPlayer
+# android update project -p . -s
+# cd jni
+# ./download.sh
+
+After this wait until ffmpeg is downloaded and built. If everything is okay, then continue. Otherwise submit your errors to Issues.
+
+# cd ..
+# ant clean debug install 
+This will build and install the program on the connected android phone.
+See the source code for examples on how to use ffmpeg from Java code. (It's not that much to see yet though)
+
+
 
 Thanks for inspiration to
 
