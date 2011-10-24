@@ -2,6 +2,8 @@ jni/Default
 jni/build
 jni/ffmpeg
 obj
+libs
 .settings/
 bin/
+gen/
 local.properties
