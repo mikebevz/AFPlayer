@@ -25,7 +25,7 @@ extern "C" {
 //	av_register_all();
 //};
 
-//static AVFormatContext *pFormatCtx;
+static AVFormatContext *pFormatCtx;
 static AVInputFormat *file_iformat;
 AVFormatParameters params;
 ByteIOContext *byteContext;
@@ -77,6 +77,14 @@ extern "C" int start_audio_stream(char* filename) {
 		return status;
 	}
 
+
+//int av_open_input_stream(AVFormatContext**, AVIOContext*, const char*, AVInputFormat*, AVFormatParameters*)
+
+	if (av_open_input_stream(&pFormatCtx, byteContext, url, file_iformat, &params) != 0) {
+		__android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot open stream");
+		return -1;
+  }
+
 	/*
 	if (av_open_input_file(&pFormatCtx, url, file_iformat, 0, &params) != 0) {
 		__android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot open stream");
@@ -84,7 +92,6 @@ extern "C" int start_audio_stream(char* filename) {
 	}*/
 
 	/* poulates AVFormatContex structure */
-	/*
 	if (av_find_stream_info(pFormatCtx) < 0) {
 		__android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot read stream info");
 		return -1;
@@ -94,7 +101,7 @@ extern "C" int start_audio_stream(char* filename) {
 			&& pFormatCtx->streams[0]->codec->codec_type != AVMEDIA_TYPE_AUDIO) {
 		__android_log_print(ANDROID_LOG_ERROR, TAG, "Sanity check failed");
 		return -1;
-	}*/
+	}
 
 	//if (avio_open(&avioContext, filename, AVIO_FLAG_READ) != 0) {
 	//	__android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot open stream");

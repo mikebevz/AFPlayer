@@ -7,3 +7,4 @@ libs
 bin/
 gen/
 local.properties
+/nbandroid/
