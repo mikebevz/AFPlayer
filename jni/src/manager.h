@@ -13,15 +13,15 @@ extern "C" {
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_org_fpl_ffmpeg_Manager_createEngine
-  (JNIEnv *, jclass);
+  (JNIEnv *, jobject);
 
 /*
  * Class:     org_fpl_ffmpeg_Manager
  * Method:    playStream
- * Signature: (Landroid/media/AudioTrack;)V
+ * Signature: (Ljava/lang/String;)V
  */
 JNIEXPORT void JNICALL Java_org_fpl_ffmpeg_Manager_playStream
-  (JNIEnv *, jclass, jobject);
+  (JNIEnv *, jobject, jstring);
 
 /*
  * Class:     org_fpl_ffmpeg_Manager
@@ -29,7 +29,7 @@ JNIEXPORT void JNICALL Java_org_fpl_ffmpeg_Manager_playStream
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_org_fpl_ffmpeg_Manager_shutdownEngine
-  (JNIEnv *, jclass);
+  (JNIEnv *, jobject);
 
 #ifdef __cplusplus
 }

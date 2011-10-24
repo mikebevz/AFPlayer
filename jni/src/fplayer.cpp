@@ -2,11 +2,6 @@
 #include <stdio.h>
 #include <string.h>
 
-
-#include "fplayer.h"
-
-#define TAG "FPlayer.cpp"
-
 //Fix for 	'UINT64_C' was not declared in this scope error
 //@see http://code.google.com/p/ffmpegsource/issues/detail?id=11
 #ifndef INT64_C
@@ -19,7 +14,13 @@ extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavdevice/avdevice.h>
+#include <jni.h>
 }
+
+#include "fplayer.h"
+
+#define TAG "FPlayer.cpp"
+#define INBUF_SIZE 4096
 
 //FPlayer::FPlayer() {
 //	av_register_all();
@@ -27,8 +28,15 @@ extern "C" {
 
 static AVFormatContext *pFormatCtx;
 static AVInputFormat *file_iformat;
-AVFormatParameters params;
-ByteIOContext *byteContext;
+
+AVDictionary **options;
+AVCodecContext *codecCtx;
+AVCodec *codec;
+AVPacket packet;
+
+int OUT_BUFFER_SIZE = AVCODEC_MAX_AUDIO_FRAME_SIZE; //48000 * 2 * 2 + FF_INPUT_BUFFER_PADDING_SIZE; // 48 KHz, 16 bit, 2 channels
+
+uint8_t * pAudioOutBuffer = (uint8_t*) av_malloc(OUT_BUFFER_SIZE); //* 2 + FF_INPUT_BUFFER_PADDING_SIZE
 
 extern "C" int start_engine() {
 	AVInputFormat *p = NULL;
@@ -40,7 +48,6 @@ extern "C" int start_engine() {
 	avdevice_register_all();
 
 	while (p = av_iformat_next(p)) {
-		//printf("%s: %s:\n", p->name, p->long_name);
 		__android_log_print(ANDROID_LOG_DEBUG, TAG, p->name);
 	}
 
@@ -55,11 +62,11 @@ extern "C" int shutdown_engine() {
 	return 0;
 }
 
-extern "C" int start_audio_stream(char* filename) {
-	const char url[] = "http://live-icy.gss.dr.dk:8000/Channel3_LQ.mp3";
+extern "C" int start_audio_stream(JNIEnv *env, jobject obj, jstring filename) {
+
+	const char url[] = "http://live-icy.gss.dr.dk:8000/Channel14_LQ.mp3";
 	const char format[] = "mp3";
 	int status;
-
 
 	__android_log_print(ANDROID_LOG_DEBUG, TAG, "Start Audio");
 	__android_log_print(ANDROID_LOG_DEBUG, TAG, url);
@@ -69,55 +76,134 @@ extern "C" int start_audio_stream(char* filename) {
 		return -1;
 	}
 
-	//params.prealloced_context = 0;
-	status = url_fopen(&byteContext, &url[0], URL_RDONLY);
+	status = avformat_open_input(&pFormatCtx, url, file_iformat, options);
 	if (status != 0) {
-		__android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot open stream");
-		__android_log_print(ANDROID_LOG_ERROR, TAG, "Status: %d", status);
-		return status;
+		__android_log_print(ANDROID_LOG_ERROR, TAG,
+				"Cannot open stream. Status: %d", status);
+		return -1;
 	}
 
-
-//int av_open_input_stream(AVFormatContext**, AVIOContext*, const char*, AVInputFormat*, AVFormatParameters*)
-
-	if (av_open_input_stream(&pFormatCtx, byteContext, url, file_iformat, &params) != 0) {
-		__android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot open stream");
-		return -1;
-  }
-
-	/*
-	if (av_open_input_file(&pFormatCtx, url, file_iformat, 0, &params) != 0) {
-		__android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot open stream");
-		return -1;
-	}*/
-
 	/* poulates AVFormatContex structure */
-	if (av_find_stream_info(pFormatCtx) < 0) {
-		__android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot read stream info");
+	status = av_find_stream_info(pFormatCtx);
+	if (status < 0) {
+		__android_log_print(ANDROID_LOG_ERROR, TAG,
+				"Cannot read stream info. Status: %d", status);
 		return -1;
 	}
 
 	if (pFormatCtx->nb_streams != 1
 			&& pFormatCtx->streams[0]->codec->codec_type != AVMEDIA_TYPE_AUDIO) {
+
 		__android_log_print(ANDROID_LOG_ERROR, TAG, "Sanity check failed");
 		return -1;
 	}
 
-	//if (avio_open(&avioContext, filename, AVIO_FLAG_READ) != 0) {
-	//	__android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot open stream");
-	//	return -1;
-	//}
+	int audioStream;
+	for (int i = 0; i < pFormatCtx->nb_streams; i++) {
+		__android_log_print(ANDROID_LOG_DEBUG, TAG, "Codecs %d: %s", i,
+				pFormatCtx->streams[i]->codec->codec_name);
+		if (pFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO) {
+			audioStream = i;
+			break;
+		}
+	}
 
-	// Retrieve stream information
+	codecCtx = pFormatCtx->streams[audioStream]->codec;
 
-	//if (av_find_stream_info(pFormatCtx) < 0) {
-	//	__android_log_print(ANDROID_LOG_ERROR, TAG,
-	//			"Couldn't find stream information");
-	//	return -1;
-	//}
+	if (codecCtx == NULL) {
+		__android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot get codec");
+		return -1;
+	}
 
-	// Dump information about file onto standard error
-	//dump_format(pFormatCtx, 0, filename, 0);
+	codec = avcodec_find_decoder(CODEC_ID_MP3); //avcodec_find_decoder_by_name("mp3adufloat");
+	//
+
+	if (codec == NULL) {
+		__android_log_print(ANDROID_LOG_ERROR, TAG, "Unsupported codec: %s", codec->name);
+		return -1;
+	}
+
+	status = avcodec_open(codecCtx, codec);
+	if (status < 0) {
+		__android_log_print(ANDROID_LOG_ERROR, TAG,
+				"Unsupported codec - avcodec_open: %s", codec->name);
+		return -1;
+	}
+
+	jclass cls = (env)->GetObjectClass(obj);
+	if (!cls) {
+		__android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot get class");
+		return -1;
+	}
+	jmethodID method = env->GetMethodID(cls, "streamCallback", "([B)V");
+	if (!method) {
+		__android_log_print(ANDROID_LOG_ERROR, TAG,
+				"Cannot get callback method");
+		return -1;
+	}
+
+	av_init_packet(&packet);
+
+	int i = 0;
+
+	while (av_read_frame(pFormatCtx, &packet) >= 0) {
+
+		__android_log_print(ANDROID_LOG_DEBUG, TAG, "Read new frame: %d", i);
+		i++;
+
+		if (codecCtx->codec_type == AVMEDIA_TYPE_AUDIO) {
+			int data_size = OUT_BUFFER_SIZE;
+			__android_log_print(
+					ANDROID_LOG_DEBUG,
+					TAG,
+					"BitRate: %d, SampleRate: %d, DataSize: %d, FrameSize: %d, Channels: %d",
+					codecCtx->bit_rate, codecCtx->sample_rate, data_size,
+					codecCtx->frame_size, codecCtx->channels);
+			int size = packet.size;
+			if (size == 0) {
+				__android_log_print(ANDROID_LOG_ERROR, TAG,
+						"Packet size is null: %d", size);
+			}
+
+			__android_log_print(ANDROID_LOG_DEBUG, TAG, "Packet size: %d",
+					size);
+
+			//int decoded = 0;
+
+			while (packet.size > 0) {
+
+				int len = codec->decode(codecCtx, pAudioOutBuffer, &data_size, &packet);
+						//avcodec_decode_audio3(codecCtx,
+						//(short *) pAudioOutBuffer, &data_size, &packet);
+
+				if (len < 0) {
+					__android_log_print(ANDROID_LOG_ERROR, TAG,
+							"Error while decoding");
+					break;
+				}
+
+				if (data_size > 0) {
+					jbyteArray bytes = env->NewByteArray(len);
+					jbyte* b = env->GetByteArrayElements(bytes, NULL);
+					memcpy(b, pAudioOutBuffer, len);
+					env->CallVoidMethod(obj, method, bytes);
+					env->ReleaseByteArrayElements(bytes, b, NULL);
+					env->DeleteLocalRef(bytes);
+					//packet.data = 0;
+				}
+
+				packet.size -= len;
+				//packet.data += len;
+				//decoded += len;
+
+			}
+			av_free_packet(&packet);
+		}
+	}
+
+	free(pAudioOutBuffer);
+	avcodec_close(codecCtx);
+	avformat_free_context(pFormatCtx);
 
 	return 0;
 }

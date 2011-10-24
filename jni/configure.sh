@@ -35,18 +35,20 @@ for version in $TARGET_ARCHS; do
 	FLAGS="$FLAGS --enable-ffmpeg --enable-ffplay --enable-ffprobe --enable-avdevice"
 	FLAGS="$FLAGS --enable-small" #--optimization-flags=-O2
 	FLAGS="$FLAGS --enable-zlib"
-	FLAGS="$FLAGS --enable-encoder=msmpeg4v3 --enable-encoder=nellymoser "
+	#FLAGS="$FLAGS --enable-encoder=msmpeg4v3 --enable-encoder=nellymoser "
     FLAGS="$FLAGS --enable-decoder=mp3 --enable-decoder=mp3adu --enable-decoder=mp3adufloat \
-                  --enable-decoder=mp3float --enable-decoder=mp3on4 --enable-decoder=mp3on4float"
-	FLAGS="$FLAGS --enable-protocol=http --enable-protocol=rtmp --enable-protocol=tcp --enable-network "
+                  --enable-decoder=mp3float --enable-decoder=mp3on4 --enable-decoder=mp3on4float \
+                  --enable-decoder=aac --enable-decoder=aac_latm"
+	FLAGS="$FLAGS --enable-protocol=http --enable-protocol=rtmp --enable-protocol=tcp --enable-network --enable-protocol=applehttp"
 	FLAGS="$FLAGS --enable-outdev=alsa --enable-outdev=sndio --enable-outdev=sdl --enable-outdev=oss"
-	FLAGS="$FLAGS --enable-muxer=mp3 --enable-muxer=wav --enable-demuxer=mp3 --enable-demuxer=wav"
+	FLAGS="$FLAGS --enable-muxer=mp3 --enable-muxer=wav \
+	              --enable-demuxer=mp3 --enable-demuxer=wav --enable-demuxer=aac"
     FLAGS="$FLAGS --enable-indev=alsa --enable-indev=bktr --enable-indev=dv1394 --enable-indev=jack \
                   --enable-indev=v412 --enable-indev=libdc1394 --enable-indev=vfcap --enable-indev=vfwcap \
                   --enable-indev=dshow --enable-indev=oss --enable-indev=x11_grab_device \
                   --enable-indev=dv1394 --enable-indev=sndio --enable-indev=fbdev --enable-indev=v4l"
-    FLAGS="$FLAGS --enable-parser=mpegaudio "
-    FLAGS="$FLAGS --enable-bsf=mp3_header_decompress"
+    FLAGS="$FLAGS --enable-parser=mpegaudio --enable-parser=aac --enable-parser=aac_latm"
+    FLAGS="$FLAGS --enable-bsf=mp3_header_decompress --enable-bsf=aac_adtstoasc"
     
     
 

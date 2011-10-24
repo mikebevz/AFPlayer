@@ -1,13 +1,15 @@
 #include <android/log.h>
+#include <jni.h>
 #include "manager.h"
 #include "fplayer.h"
+
 
 #define TAG "Player.c"
 
 //FManager fmanager;
 
 JNIEXPORT void JNICALL Java_org_fpl_ffmpeg_Manager_createEngine(JNIEnv *env,
-		jclass clazz) {
+		jobject obj) {
 
 	__android_log_write(ANDROID_LOG_DEBUG, TAG, "Create Engine");
 
@@ -21,13 +23,13 @@ JNIEXPORT void JNICALL Java_org_fpl_ffmpeg_Manager_createEngine(JNIEnv *env,
 }
 
 JNIEXPORT void JNICALL Java_org_fpl_ffmpeg_Manager_playStream(JNIEnv *env,
-		jclass clazz, jstring filename) {
-	start_audio_stream(filename);
+		jobject obj, jstring filename) {
 
+	start_audio_stream(env, obj, filename);
 
 }
 
 JNIEXPORT void JNICALL Java_org_fpl_ffmpeg_Manager_shutdownEngine(JNIEnv *env,
-		jclass clazz) {
+		jobject obj) {
 	shutdown_engine();
 }
