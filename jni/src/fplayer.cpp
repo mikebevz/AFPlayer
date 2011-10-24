@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 
+
 #include "fplayer.h"
 
 #define TAG "FPlayer.cpp"
@@ -17,7 +18,6 @@ extern "C" {
 #include <android/log.h>
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
-//#include <libavformat/avio.h>
 #include <libavdevice/avdevice.h>
 }
 
@@ -25,10 +25,10 @@ extern "C" {
 //	av_register_all();
 //};
 
-static AVFormatContext *pFormatCtx;
+//static AVFormatContext *pFormatCtx;
 static AVInputFormat *file_iformat;
 AVFormatParameters params;
-//AVIOContext *avioContext;
+ByteIOContext *byteContext;
 
 extern "C" int start_engine() {
 	AVInputFormat *p = NULL;
@@ -58,24 +58,33 @@ extern "C" int shutdown_engine() {
 extern "C" int start_audio_stream(char* filename) {
 	const char url[] = "http://live-icy.gss.dr.dk:8000/Channel3_LQ.mp3";
 	const char format[] = "mp3";
+	int status;
+
 
 	__android_log_print(ANDROID_LOG_DEBUG, TAG, "Start Audio");
 	__android_log_print(ANDROID_LOG_DEBUG, TAG, url);
-
 
 	if (!(file_iformat = av_find_input_format(format))) {
 		__android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot find mp3");
 		return -1;
 	}
 
-	params.prealloced_context = 0;
+	//params.prealloced_context = 0;
+	status = url_fopen(&byteContext, &url[0], URL_RDONLY);
+	if (status != 0) {
+		__android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot open stream");
+		__android_log_print(ANDROID_LOG_ERROR, TAG, "Status: %d", status);
+		return status;
+	}
 
+	/*
 	if (av_open_input_file(&pFormatCtx, url, file_iformat, 0, &params) != 0) {
 		__android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot open stream");
 		return -1;
-	}
+	}*/
 
 	/* poulates AVFormatContex structure */
+	/*
 	if (av_find_stream_info(pFormatCtx) < 0) {
 		__android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot read stream info");
 		return -1;
@@ -85,7 +94,7 @@ extern "C" int start_audio_stream(char* filename) {
 			&& pFormatCtx->streams[0]->codec->codec_type != AVMEDIA_TYPE_AUDIO) {
 		__android_log_print(ANDROID_LOG_ERROR, TAG, "Sanity check failed");
 		return -1;
-	}
+	}*/
 
 	//if (avio_open(&avioContext, filename, AVIO_FLAG_READ) != 0) {
 	//	__android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot open stream");

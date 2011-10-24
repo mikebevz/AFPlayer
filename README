@@ -8,6 +8,9 @@ This project is intented to build ffmpeg based player for Android.
 Make sure that you have environment variable ANDROID_HOME pointing to Android SDK, and NDK pointing to Android Native SDK.
 Then add them on your system path so you can work comfortably. Add the following line to ~/.bashrc or ~/.bash_profile, depending on your system
 
+Specify here location of Android Native SDK
+# export NDK="$HOME/ndk-android"   
+
 # export $NDK:$ANDROID_HOME/tools:$ANDROID_HOME/platform-tools:$PATH
 
 Now get the source code
