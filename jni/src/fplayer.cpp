@@ -74,7 +74,8 @@ extern "C" int start_audio_stream(JNIEnv *env, jobject obj, jstring filename) {
 	__android_log_print(ANDROID_LOG_DEBUG, TAG, url);
 
 	if (!(file_iformat = av_find_input_format(format))) {
-		__android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot find format: %s", format);
+		__android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot find format: %s",
+				format);
 		return -1;
 	}
 
@@ -157,13 +158,14 @@ extern "C" int start_audio_stream(JNIEnv *env, jobject obj, jstring filename) {
 		if (codecCtx->codec_type == AVMEDIA_TYPE_AUDIO) {
 			int frame_size_ptr = OUT_BUFFER_SIZE;
 
+			/*
 			__android_log_print(
 					ANDROID_LOG_DEBUG,
 					TAG,
 					"BitRate: %d, SampleRate: %d, DataSize: %d, FrameSize: %d, Channels: %d",
 					codecCtx->bit_rate, codecCtx->sample_rate, frame_size_ptr,
 					codecCtx->frame_size, codecCtx->channels);
-
+			*/
 			int size = avpkt.size;
 			if (size == 0) {
 				__android_log_print(ANDROID_LOG_ERROR, TAG,
@@ -172,12 +174,11 @@ extern "C" int start_audio_stream(JNIEnv *env, jobject obj, jstring filename) {
 
 			__android_log_print(ANDROID_LOG_DEBUG, TAG, "Packet size: %d",
 					size);
-
+			int decoded = 0;
 			while (size > 0) {
 
 				int len = avcodec_decode_audio3(codecCtx, (int16_t *) samples,
 						&frame_size_ptr, &avpkt);
-				//codec->decode(codecCtx, pAudioOutBuffer, &frame_size_ptr, &avpkt);
 
 				if (len < 0) {
 					__android_log_print(ANDROID_LOG_ERROR, TAG,
@@ -185,19 +186,18 @@ extern "C" int start_audio_stream(JNIEnv *env, jobject obj, jstring filename) {
 					break;
 				}
 
-				//if (frame_size_ptr > 0) {
-				jbyteArray array = env->NewByteArray(frame_size_ptr);
-				jbyte* bytes = env->GetByteArrayElements(array, NULL);
-				memcpy(bytes, (int16_t *) samples, frame_size_ptr);
-				env->CallVoidMethod(obj, method, array);
-				env->ReleaseByteArrayElements(array, bytes, NULL);
-				env->DeleteLocalRef(array);
-				//packet.data = 0;
-				//}
+				if (frame_size_ptr > 0) {
+					jbyteArray array = env->NewByteArray(frame_size_ptr);
+					jbyte* bytes = env->GetByteArrayElements(array, NULL);
+					memcpy(bytes + decoded, (int16_t *) samples, frame_size_ptr);
+					env->CallVoidMethod(obj, method, array);
+					env->ReleaseByteArrayElements(array, bytes, NULL);
+					env->DeleteLocalRef(array);
+
+				}
 
 				size -= len;
-				//packet.data += len;
-				//decoded += len;
+				decoded += len;
 
 			}
 			av_free_packet(&avpkt);

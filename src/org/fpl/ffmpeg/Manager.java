@@ -36,7 +36,7 @@ public class Manager {
 
 	public void streamCallback(byte[] data) {
 		// TODO write to AudioTrack
-		Log.d("Manager", "Fik " + data.length + " byte");
+		Log.d("Manager", "Received " + data.length + " byte");
 		track.write(data, 0, data.length);
 	}
 

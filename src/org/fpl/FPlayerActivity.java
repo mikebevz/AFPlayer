@@ -3,6 +3,7 @@ package org.fpl;
 import org.fpl.ffmpeg.Manager;
 
 import android.app.Activity;
+import android.os.AsyncTask;
 import android.os.Bundle;
 
 public class FPlayerActivity extends Activity {
@@ -21,10 +22,24 @@ public class FPlayerActivity extends Activity {
         shoutcast = "http://live-icy.gss.dr.dk:8000/Channel3_LQ.mp3";
         rtsp = "rtsp://live-rtsp.dr.dk/rtplive/_definst_/Channel3_LQ.stream";
         
-        manager = new Manager();
-        manager.createEngine();
-        manager.playStream(shoutcast);
         
+        
+        
+        
+        AsyncTask<Void, Void, Void> async = new AsyncTask<Void, Void, Void>() {
+
+			@Override
+			protected Void doInBackground(Void... params) {
+				
+				manager = new Manager();
+		        manager.createEngine();
+		        manager.playStream(shoutcast);
+				
+				return null;
+			}
+		};
+		
+		async.execute();
         
     }
 	
