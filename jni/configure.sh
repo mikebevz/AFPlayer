@@ -30,18 +30,20 @@ for version in $TARGET_ARCHS; do
 	#git FLAGS="$FLAGS --soname-prefix=/data/data/org.fpl/lib/"
 	FLAGS="$FLAGS --disable-everything --disable-doc --disable-asm --disable-yasm --disable-symver" #
 	FLAGS="$FLAGS --enable-shared"
-	FLAGS="$FLAGS --nm=$TOOLCHAIN/bin/$ARCH-$TARGET_OS-androideabi-nm"
+	FLAGS="$FLAGS --nm=$TOOLCHAIN/bin/$ARCH-$TARGET_OS-androideabi-nm "
 	#FLAGS="$FLAGS -Wl,-T"
-	FLAGS="$FLAGS --enable-ffmpeg --enable-ffplay --enable-ffprobe --enable-avdevice"
+	FLAGS="$FLAGS --enable-ffmpeg --enable-ffserver --enable-ffplay --enable-ffprobe --enable-avdevice --enable-swscale "
 	FLAGS="$FLAGS --enable-small" #--optimization-flags=-O2
-	FLAGS="$FLAGS --enable-zlib"
-	#FLAGS="$FLAGS --enable-encoder=msmpeg4v3 --enable-encoder=nellymoser "
+	FLAGS="$FLAGS --enable-zlib "
+	FLAGS="$FLAGS --enable-encoder=msmpeg4v3 --enable-encoder=nellymoser --enable-encoder=pcm_alaw \
+	              --enable-encoder=pcm_f32be --enable-encoder=pcm_s16be --enable-encoder=pcm_s16le "
     FLAGS="$FLAGS --enable-decoder=mp3 --enable-decoder=mp3adu --enable-decoder=mp3adufloat \
                   --enable-decoder=mp3float --enable-decoder=mp3on4 --enable-decoder=mp3on4float \
-                  --enable-decoder=aac --enable-decoder=aac_latm"
+                  --enable-decoder=aac --enable-decoder=aac_latm "
 	FLAGS="$FLAGS --enable-protocol=http --enable-protocol=rtmp --enable-protocol=tcp --enable-network --enable-protocol=applehttp"
 	FLAGS="$FLAGS --enable-outdev=alsa --enable-outdev=sndio --enable-outdev=sdl --enable-outdev=oss"
-	FLAGS="$FLAGS --enable-muxer=mp3 --enable-muxer=wav \
+	FLAGS="$FLAGS --enable-muxer=mp3 --enable-muxer=wav --enable-muxer=pcm_alaw --enable-muxer=pcm_mulaw \
+	              --enable-muxer=pcm_s16be --enable-muxer=pcm_s16le --enable-muxer=pcm_u16be --enable-muxer=pcm_u16le \
 	              --enable-demuxer=mp3 --enable-demuxer=wav --enable-demuxer=aac"
     FLAGS="$FLAGS --enable-indev=alsa --enable-indev=bktr --enable-indev=dv1394 --enable-indev=jack \
                   --enable-indev=v412 --enable-indev=libdc1394 --enable-indev=vfcap --enable-indev=vfwcap \

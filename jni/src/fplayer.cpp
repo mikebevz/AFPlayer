@@ -32,14 +32,16 @@ static AVInputFormat *file_iformat;
 AVDictionary **options;
 AVCodecContext *codecCtx;
 AVCodec *codec;
-AVPacket packet;
+AVPacket avpkt;
 
 int OUT_BUFFER_SIZE = AVCODEC_MAX_AUDIO_FRAME_SIZE; //48000 * 2 * 2 + FF_INPUT_BUFFER_PADDING_SIZE; // 48 KHz, 16 bit, 2 channels
 
-uint8_t * pAudioOutBuffer = (uint8_t*) av_malloc(OUT_BUFFER_SIZE); //* 2 + FF_INPUT_BUFFER_PADDING_SIZE
+char * samples = (char *) av_malloc(OUT_BUFFER_SIZE); //* 2 + FF_INPUT_BUFFER_PADDING_SIZE
 
 extern "C" int start_engine() {
 	AVInputFormat *p = NULL;
+
+	//freopen ("myfile.txt","w",stdout);
 
 	__android_log_print(ANDROID_LOG_DEBUG, TAG, "Start Engine");
 
@@ -72,7 +74,7 @@ extern "C" int start_audio_stream(JNIEnv *env, jobject obj, jstring filename) {
 	__android_log_print(ANDROID_LOG_DEBUG, TAG, url);
 
 	if (!(file_iformat = av_find_input_format(format))) {
-		__android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot find mp3");
+		__android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot find format: %s", format);
 		return -1;
 	}
 
@@ -115,11 +117,12 @@ extern "C" int start_audio_stream(JNIEnv *env, jobject obj, jstring filename) {
 		return -1;
 	}
 
-	codec = avcodec_find_decoder(CODEC_ID_MP3); //avcodec_find_decoder_by_name("mp3adufloat");
-	//
+	codec = avcodec_find_decoder(
+			pFormatCtx->streams[audioStream]->codec->codec_id); //avcodec_find_decoder_by_name("mp3adufloat");
 
 	if (codec == NULL) {
-		__android_log_print(ANDROID_LOG_ERROR, TAG, "Unsupported codec: %s", codec->name);
+		__android_log_print(ANDROID_LOG_ERROR, TAG, "Unsupported codec: %s",
+				codec->name);
 		return -1;
 	}
 
@@ -142,24 +145,26 @@ extern "C" int start_audio_stream(JNIEnv *env, jobject obj, jstring filename) {
 		return -1;
 	}
 
-	av_init_packet(&packet);
+	av_init_packet(&avpkt);
 
 	int i = 0;
 
-	while (av_read_frame(pFormatCtx, &packet) >= 0) {
+	while (av_read_frame(pFormatCtx, &avpkt) >= 0) {
 
 		__android_log_print(ANDROID_LOG_DEBUG, TAG, "Read new frame: %d", i);
 		i++;
 
 		if (codecCtx->codec_type == AVMEDIA_TYPE_AUDIO) {
-			int data_size = OUT_BUFFER_SIZE;
+			int frame_size_ptr = OUT_BUFFER_SIZE;
+
 			__android_log_print(
 					ANDROID_LOG_DEBUG,
 					TAG,
 					"BitRate: %d, SampleRate: %d, DataSize: %d, FrameSize: %d, Channels: %d",
-					codecCtx->bit_rate, codecCtx->sample_rate, data_size,
+					codecCtx->bit_rate, codecCtx->sample_rate, frame_size_ptr,
 					codecCtx->frame_size, codecCtx->channels);
-			int size = packet.size;
+
+			int size = avpkt.size;
 			if (size == 0) {
 				__android_log_print(ANDROID_LOG_ERROR, TAG,
 						"Packet size is null: %d", size);
@@ -168,13 +173,11 @@ extern "C" int start_audio_stream(JNIEnv *env, jobject obj, jstring filename) {
 			__android_log_print(ANDROID_LOG_DEBUG, TAG, "Packet size: %d",
 					size);
 
-			//int decoded = 0;
+			while (size > 0) {
 
-			while (packet.size > 0) {
-
-				int len = codec->decode(codecCtx, pAudioOutBuffer, &data_size, &packet);
-						//avcodec_decode_audio3(codecCtx,
-						//(short *) pAudioOutBuffer, &data_size, &packet);
+				int len = avcodec_decode_audio3(codecCtx, (int16_t *) samples,
+						&frame_size_ptr, &avpkt);
+				//codec->decode(codecCtx, pAudioOutBuffer, &frame_size_ptr, &avpkt);
 
 				if (len < 0) {
 					__android_log_print(ANDROID_LOG_ERROR, TAG,
@@ -182,26 +185,26 @@ extern "C" int start_audio_stream(JNIEnv *env, jobject obj, jstring filename) {
 					break;
 				}
 
-				if (data_size > 0) {
-					jbyteArray bytes = env->NewByteArray(len);
-					jbyte* b = env->GetByteArrayElements(bytes, NULL);
-					memcpy(b, pAudioOutBuffer, len);
-					env->CallVoidMethod(obj, method, bytes);
-					env->ReleaseByteArrayElements(bytes, b, NULL);
-					env->DeleteLocalRef(bytes);
-					//packet.data = 0;
-				}
+				//if (frame_size_ptr > 0) {
+				jbyteArray array = env->NewByteArray(frame_size_ptr);
+				jbyte* bytes = env->GetByteArrayElements(array, NULL);
+				memcpy(bytes, (int16_t *) samples, frame_size_ptr);
+				env->CallVoidMethod(obj, method, array);
+				env->ReleaseByteArrayElements(array, bytes, NULL);
+				env->DeleteLocalRef(array);
+				//packet.data = 0;
+				//}
 
-				packet.size -= len;
+				size -= len;
 				//packet.data += len;
 				//decoded += len;
 
 			}
-			av_free_packet(&packet);
+			av_free_packet(&avpkt);
 		}
 	}
 
-	free(pAudioOutBuffer);
+	free(samples);
 	avcodec_close(codecCtx);
 	avformat_free_context(pFormatCtx);
 
