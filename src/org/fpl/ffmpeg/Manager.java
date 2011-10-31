@@ -41,11 +41,11 @@ public class Manager {
 
 		track = new AudioTrack(AudioManager.STREAM_MUSIC, 44100,
 				AudioFormat.CHANNEL_CONFIGURATION_STEREO,
-				AudioFormat.ENCODING_PCM_16BIT, minBufSize * 8,
+				AudioFormat.ENCODING_PCM_16BIT, 176400, //minBufSize * 8,
 				AudioTrack.MODE_STREAM);
 		// track.play();
 
-	}
+	} 
 
 	public native void createEngine();
 
@@ -53,15 +53,15 @@ public class Manager {
 
 	public native void shutdownEngine();
 
-	public void streamCallback(byte[] data) {
+	public void streamCallback(byte[] data, int length) {
 		// TODO write to AudioTrack
-		Log.d("Manager", "Received " + data.length + " byte");
+		Log.d("Manager", "Received " + data.length + " byte wher we use "+length);
 
 		nBytesRead = data.length;
 
 		if (nBytesRead >= 0) {
-			int result = track.write(data, 0, data.length);
-			if (result == AudioTrack.ERROR_INVALID_OPERATION || result != data.length) {
+			int result = track.write(data, 0, length);
+			if (result == AudioTrack.ERROR_INVALID_OPERATION || result != length) {
 				Log.e(TAG, "Cannot write to AudioTrack");
 				return;
 			}

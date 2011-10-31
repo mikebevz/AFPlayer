@@ -14,6 +14,8 @@ public class FPlayerActivity extends Activity {
 	private String rtsp;
 	private Manager manager;
 	private String applehttp;
+	
+	private String LOCK = "LOCK";
 
 	@Override
     public void onCreate(Bundle savedInstanceState) {
@@ -27,28 +29,36 @@ public class FPlayerActivity extends Activity {
         
         
         
-        AsyncTask<Void, Void, Void> async = new AsyncTask<Void, Void, Void>() {
+        Thread t = new Thread() {
 
 			@Override
-			protected Void doInBackground(Void... params) {
-				
-				manager = new Manager();
-		        manager.createEngine();
-		        manager.playStream(applehttp);
-				
-				return null;
+			public void run() {				
+				synchronized (LOCK) {
+
+					manager = new Manager();
+			        manager.createEngine();
+			        LOCK.notifyAll();
+				}
+		        manager.playStream(applehttp);				
 			}
 		};
 		
-		async.execute();
+		synchronized (LOCK) {
+			t.start();
+			try {
+				LOCK.wait();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}			
+		}
         
     }
 	
 	
 	@Override
-	protected void onStop() {
+	protected void onDestroy() {
 		manager.shutdownEngine();
-		super.onStop();
+		super.onDestroy();
 		
 	}
 }

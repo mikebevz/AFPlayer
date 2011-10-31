@@ -145,7 +145,7 @@ extern "C" int start_audio_stream(JNIEnv *env, jobject obj, jstring filename) {
 		return -1;
 	}
 	jmethodID method = (JNU_Get_Env())->GetMethodID(cls, "streamCallback",
-			"([B)V");
+			"([BI)V");
 	if (!method) {
 		__android_log_print(ANDROID_LOG_ERROR, TAG,
 				"Cannot get callback method");
@@ -156,37 +156,42 @@ extern "C" int start_audio_stream(JNIEnv *env, jobject obj, jstring filename) {
 
 	int i = 0;
 
-	int flushPerSecond = 1;
+	int flushPerSecond = 2;
 
-	int outputBufferSize = codecCtx->sample_rate * codecCtx->channels * codecCtx->bits_per_raw_sample / flushPerSecond;
-
+	int outputBufferSize = -1;
 	__android_log_print(ANDROID_LOG_DEBUG, TAG, "OutBufferSize: %d    codecCtx->bits_per_raw_sample %d", outputBufferSize, codecCtx->bits_per_raw_sample);
+
+	/*__android_log_print(
+			ANDROID_LOG_DEBUG,
+			TAG,
+			"BitRate: %d, SampleRate: %d, DataSize: %d, FrameSize: %d, Channels: %d",
+			codecCtx->bit_rate, codecCtx->sample_rate, frame_size_ptr,
+			codecCtx->frame_size, codecCtx->channels);
+	jbyteArray array = env->NewByteArray(outputBufferSize);
+	jbyte* outputBuffer = env->GetByteArrayElements(array, NULL);
+	 */
+
+
+	jbyteArray array;
+	jbyte* outputBuffer;
+	int outputBufferPos = 0;
 
 	while (av_read_frame(pFormatCtx, &avpkt) >= 0) {
 
-		__android_log_print(ANDROID_LOG_DEBUG, TAG, "Read new frame: %d", i);
+		//__android_log_print(ANDROID_LOG_DEBUG, TAG, "Read new frame: %d", i);
 		i++;
 
 		if (codecCtx->codec_type == AVMEDIA_TYPE_AUDIO) {
 			int frame_size_ptr = OUT_BUFFER_SIZE;
 
-			/*__android_log_print(
-					ANDROID_LOG_DEBUG,
-					TAG,
-					"BitRate: %d, SampleRate: %d, DataSize: %d, FrameSize: %d, Channels: %d",
-					codecCtx->bit_rate, codecCtx->sample_rate, frame_size_ptr,
-					codecCtx->frame_size, codecCtx->channels);
-			 */
-
 			int size = avpkt.size;
 
 			if (size == 0) {
-				__android_log_print(ANDROID_LOG_ERROR, TAG,
-						"Packet size is 0: %d", size);
+				__android_log_print(ANDROID_LOG_ERROR, TAG, "Packet size is 0: %d", size);
 			}
 
-			__android_log_print(ANDROID_LOG_DEBUG, TAG, "Packet size: %d",
-					size);
+			//__android_log_print(ANDROID_LOG_DEBUG, TAG, "Packet size: %d", size);
+
 
 			while (size > 0) {
 
@@ -197,11 +202,46 @@ extern "C" int start_audio_stream(JNIEnv *env, jobject obj, jstring filename) {
 					__android_log_print(ANDROID_LOG_ERROR, TAG,
 							"Error while decoding. Status/len: %d. Size: %d",
 							len, size);
-
 					break;
 				}
 
+				if (outputBufferSize == -1) {
+					outputBufferSize = codecCtx->sample_rate * codecCtx->channels * 2 / flushPerSecond;
+					array = env->NewByteArray(outputBufferSize);
+					outputBuffer = env->GetByteArrayElements(array, NULL);
+					__android_log_print(ANDROID_LOG_DEBUG, TAG, "OutBufferSize: %d    codecCtx->bits_per_raw_sample %d", outputBufferSize, codecCtx->bits_per_raw_sample);
+				}
 
+
+				//__android_log_print(ANDROID_LOG_ERROR, TAG,"outputBufferPos=%d + frame_size_ptr=%d >? outputBufferSize=%d", outputBufferPos, frame_size_ptr, outputBufferSize);
+
+				// Hvis buffer er fuld så flus den til Java
+				if (outputBufferPos + frame_size_ptr > outputBufferSize) {
+					__android_log_print(ANDROID_LOG_ERROR, TAG,"outputBufferPos=%d + frame_size_ptr=%d >? outputBufferSize=%d", outputBufferPos, frame_size_ptr, outputBufferSize);
+					env->CallVoidMethod(obj, method, array, outputBufferPos);
+					__android_log_print(ANDROID_LOG_ERROR, TAG, "Flushed buffer to java");
+					outputBufferPos = 0;
+
+/*
+					if (outputBufferSize != -1) {
+						env->ReleaseByteArrayElements(array, outputBuffer, NULL);
+						env->DeleteLocalRef(array);
+						outputBufferSize = -1;
+					}
+					if (outputBufferSize == -1) {
+						outputBufferSize = codecCtx->sample_rate * codecCtx->channels * 2 / flushPerSecond;
+						array = env->NewByteArray(outputBufferSize);
+						outputBuffer = env->GetByteArrayElements(array, NULL);
+						__android_log_print(ANDROID_LOG_DEBUG, TAG, "OutBufferSize: %d    codecCtx->bits_per_raw_sample %d", outputBufferSize, codecCtx->bits_per_raw_sample);
+					}
+*/
+				}
+
+				memcpy( (outputBuffer+outputBufferPos), (int16_t *) samples, frame_size_ptr);
+				outputBufferPos += frame_size_ptr;
+
+
+				/*
 				if (frame_size_ptr > 0) {
 					jbyteArray array = env->NewByteArray(frame_size_ptr);
 					jbyte* bytes = env->GetByteArrayElements(array, NULL);
@@ -209,7 +249,7 @@ extern "C" int start_audio_stream(JNIEnv *env, jobject obj, jstring filename) {
 					env->CallVoidMethod(obj, method, array);
 					env->ReleaseByteArrayElements(array, bytes, NULL);
 					env->DeleteLocalRef(array);
-				}
+				}*/
 
 				size -= len;
 				//	decoded += len;
@@ -217,10 +257,14 @@ extern "C" int start_audio_stream(JNIEnv *env, jobject obj, jstring filename) {
 			}
 
 			av_free_packet(&avpkt);
-
 		}
 	}
 
+	if (outputBufferSize != -1) {
+		env->ReleaseByteArrayElements(array, outputBuffer, NULL);
+		env->DeleteLocalRef(array);
+		outputBufferSize = -1;
+	}
 	free(samples);
 	avcodec_close(codecCtx);
 	avformat_free_context(pFormatCtx);
