@@ -2,6 +2,7 @@
 #include <jni.h>
 #include "manager.h"
 #include "fplayer.h"
+#include "player.h"
 
 #define TAG "Player.c"
 
@@ -12,12 +13,31 @@ jint JNI_OnLoad(JavaVM* jvm, void* reserved) {
 	JNIEnv *env;
 	cachedVM = jvm;
 	__android_log_print(ANDROID_LOG_INFO, TAG, "JNI_OnLoad Called");
-	if((*jvm)->GetEnv(jvm, (void **) &env, JNI_VERSION_1_6) != JNI_OK) {
-		__android_log_print(ANDROID_LOG_ERROR, TAG, "Failed to get the environment using GetEnv()");
+	if ((*jvm)->GetEnv(jvm, (void **) &env, JNI_VERSION_1_6) != JNI_OK) {
+		__android_log_print(ANDROID_LOG_ERROR, TAG,
+				"Failed to get the environment using GetEnv()");
 		return -1;
 	}
 
 	return JNI_VERSION_1_6;
+}
+
+JNIEXPORT void JNICALL
+JNI_OnUnload(JavaVM *jvm, void *reserved) {
+	JNIEnv *env;
+	if ((*jvm)->GetEnv(jvm, (void**) &env, JNI_VERSION_1_6)) {
+		return;
+	}
+	//(*env)->DeleteWeakGlobalRef(env, );
+	return;
+}
+
+// Get the environment from
+JNIEnv *JNU_Get_Env() {
+	JNIEnv *env;
+	(*cachedVM)->GetEnv(cachedVM, (void **) &env, JNI_VERSION_1_6);
+
+	return env;
 }
 
 JNIEXPORT void JNICALL Java_org_fpl_ffmpeg_Manager_createEngine(JNIEnv *env,

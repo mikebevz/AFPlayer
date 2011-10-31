@@ -28,9 +28,17 @@ After this wait until ffmpeg is downloaded and built. If everything is okay, the
 This will build and install the program on the connected android phone.
 See the source code for examples on how to use ffmpeg from Java code. (It's not that much to see yet though)
 
+- Example application -
+The application plays an audio stream (hardcoded for now) using FFMPEG decoder. 
+
+Structurally it looks like this
+
+Activity -> ffmpeg.Manager (playStream) -> player.c (Java_org_fpl_ffmpeg_Manager_playStream) -> fplayer.cpp (start_audio_stream) -> ffmpeg.Manager (streamCallback) -> AudioTrack()
 
 
-Thanks for inspiration to
+
+
+Thanks for inspiration and help to
 
 - http://bambuser.com/opensource
 - http://abitno.me/compile-ffmpeg-android-ndk
@@ -39,5 +47,15 @@ Thanks for inspiration to
 - https://github.com/havlenapetr/FFMpeg
 - http://www.android-dev.ro/2011/06/14/compiling-ffmpeg-on-android/
 - http://mhandroid.wordpress.com/2011/01/23/using-eclipse-for-android-cc-development/
+- http://stackoverflow.com/questions/5448990/ffmpeg-and-types-of-samples
+- http://android.wooyd.org/JNIExample/files/JNIExample.pdf
+- http://cekirdek.pardus.org.tr/~ismail/ffmpeg-docs/libavcodec_2utils_8c.html
+- http://cekirdek.pardus.org.tr/~ismail/ffmpeg-docs/api-example_8c-source.html
+- http://java.sun.com/docs/books/jni/html/other.html
+- http://stackoverflow.com/questions/2560748/how-do-i-handle-calls-to-audiotrack-from-jni-without-crashing
+- http://stackoverflow.com/questions/4877880/how-to-play-aac-format-audio-file-in-android
+- http://code.google.com/p/mplayer-ce/source/browse/branches/newgui/mplayer/libavcodec/api-example.c?spec=svn463&r=463
+- http://ffmpeg.zeranoe.com/forum/viewtopic.php?f=15&t=47
+- http://pastebin.com/jC5CEddU
 
 

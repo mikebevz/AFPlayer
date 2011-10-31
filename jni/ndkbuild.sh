@@ -2,7 +2,7 @@
 
 export NDK_BUILD="YES"
 
-ndk-build
+$NDK/ndk-build
 
 unset NDK_BUILD
 

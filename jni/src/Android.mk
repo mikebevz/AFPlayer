@@ -12,6 +12,9 @@ LOCAL_LDLIBS += -L$(LOCAL_PATH)/../../libs/armeabi -llog  \
 			    	-lavutil -lpostproc -lswscale
 LOCAL_STATIC_LIBRARIES := libavcodec libavdevice libavfilter libavformat libavutil libpostproc \
 						  libswscale 
-						  
+
+LOCAL_CFLAGS += -g					  
+LOCAL_CPPFLAGS += -g
+LOCAL_LDFLAGS += -Wl,-Map,xxx.map
 
 include $(BUILD_SHARED_LIBRARY)

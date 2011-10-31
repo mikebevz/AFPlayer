@@ -13,6 +13,7 @@ public class FPlayerActivity extends Activity {
     private String shoutcast;
 	private String rtsp;
 	private Manager manager;
+	private String applehttp;
 
 	@Override
     public void onCreate(Bundle savedInstanceState) {
@@ -21,7 +22,7 @@ public class FPlayerActivity extends Activity {
         
         shoutcast = "http://live-icy.gss.dr.dk:8000/Channel3_LQ.mp3";
         rtsp = "rtsp://live-rtsp.dr.dk/rtplive/_definst_/Channel3_LQ.stream";
-        
+        applehttp = "http://live-http.gss.dr.dk/streaming/audio/Channel21/Channel21_LQ0.m3u8"; //"http://javabog.dk/privat/Channel21_LQ-20111031-110328-0025490.ts";
         
         
         
@@ -33,7 +34,7 @@ public class FPlayerActivity extends Activity {
 				
 				manager = new Manager();
 		        manager.createEngine();
-		        manager.playStream(shoutcast);
+		        manager.playStream(applehttp);
 				
 				return null;
 			}
