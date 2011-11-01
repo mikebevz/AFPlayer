@@ -79,17 +79,5 @@ public class Manager {
 
 	}
 
-	private void playFromBuffer() {
-		/*
-		 * if (buffer.size() >= BUFFER_SIZE) {
-		 * 
-		 * for (int i=0; i<buffer.size();i++) { byte[] data = buffer.get(i);
-		 * track.write(data, 0, data.length); buffer.remove(i); }
-		 * 
-		 * 
-		 * }
-		 */
-
-	}
 
 }

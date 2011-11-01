@@ -9,4 +9,21 @@
     android:layout_height="wrap_content" 
     android:text="@string/hello"
     />
+
+<Button 
+    android:layout_width="fill_parent" 
+    android:layout_height="wrap_content"
+    android:text="Play"
+    android:id="@+id/playBtn"
+    />
+
+<Button 
+    android:layout_width="fill_parent" 
+    android:layout_height="wrap_content"
+    android:text="Stop"
+    android:id="@+id/stopBtn"
+    />
+
+
+
 </LinearLayout>
