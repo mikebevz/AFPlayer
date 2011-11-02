@@ -42,9 +42,8 @@ for version in $TARGET_ARCHS; do
     FLAGS="$FLAGS --enable-decoder=mp3 --enable-decoder=mp3adu --enable-decoder=mp3adufloat \
                   --enable-decoder=mp3float --enable-decoder=mp3on4 --enable-decoder=mp3on4floats \
                   --enable-decoder=aac --enable-decoder=aac_latm"
-	FLAGS="$FLAGS --enable-protocol=http --enable-protocol=rtmp --enable-protocol=tcp --enable-network --enable-protocol=applehttp \
-	             # --enable-protocol=rtmpe --enable-protocol=rtmps --enable-protocol=rtmtp --enable-protocol=rtmtpe --enable-protocol=rtp \
-	              --enable-protocol=udp"
+	FLAGS="$FLAGS --enable-protocol=http --enable-protocol=rtmp --enable-protocol=tcp --enable-network --enable-protocol=applehttp"
+	             # --enable-protocol=rtmpe --enable-protocol=rtmps --enable-protocol=rtmtp --enable-protocol=rtmtpe --enable-protocol=rtp  --enable-protocol=udp"
 	#FLAGS="$FLAGS --enable-outdev=alsa --enable-outdev=sndio --enable-outdev=sdl --enable-outdev=oss"
 	FLAGS="$FLAGS --enable-muxer=mp3 --enable-muxer=wav --enable-muxer=pcm_alaw --enable-muxer=pcm_mulaw \
 	              --enable-muxer=pcm_s16be --enable-muxer=pcm_s16le --enable-muxer=pcm_u16be --enable-muxer=pcm_u16le \
@@ -82,6 +81,8 @@ for version in $TARGET_ARCHS; do
 
 	mkdir -p $DEST
 	echo $FLAGS --extra-cflags="$EXTRA_CFLAGS" --extra-ldflags="$EXTRA_LDFLAGS" > $DEST/info.txt
+	echo $DEST
+	echo ./configure $FLAGS --extra-cflags="$EXTRA_CFLAGS" --extra-ldflags="$EXTRA_LDFLAGS"
 	./configure $FLAGS --extra-cflags="$EXTRA_CFLAGS" --extra-ldflags="$EXTRA_LDFLAGS" | tee $DEST/configuration.txt
 	[ $PIPESTATUS == 0 ] || exit 1
 	# make clean
