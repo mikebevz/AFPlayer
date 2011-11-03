@@ -19,14 +19,17 @@ if [ -d $FFMPEG_DIR ]; then
 fi
 
 if [ -f $FFMPEG_FILE ]; then
-	echo "Delete existing archive"
-	rm $FFMPEG_FILE
+	# echo "Delete existing archive"
+	# rm $FFMPEG_FILE
+	echo "Using existing archive $FFMPEG_FILE (remove it to re-download)"
+else
+	# Download archive
+	# 
+	echo "Downloading archive $FFMPEG_URL"
+	wget $FFMPEG_URL
 fi
 
 
-# Download archive
-# 
-wget $FFMPEG_URL
 	
 if [ -f $FFMPEG_FILE ]; then
 	tar -xzvf $FFMPEG_FILE
@@ -36,7 +39,7 @@ if [ -f $FFMPEG_FILE ]; then
     cd ..
     ./configure.sh
     ./ndkbuild.sh
-    rm $FFMPEG_FILE
+    #rm $FFMPEG_FILE
 fi
 
 
