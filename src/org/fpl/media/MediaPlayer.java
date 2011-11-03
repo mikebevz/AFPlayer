@@ -151,8 +151,9 @@ public class MediaPlayer {
 	 */
 	public void stop() throws IllegalStateException {
 		//n_stopStream();
+		track.stop();
 		stopRequested = true;
-    track.stop();
+		
 	}
 
 	public void prepare() throws IllegalStateException {
