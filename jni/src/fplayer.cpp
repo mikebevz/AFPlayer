@@ -26,7 +26,7 @@ extern "C" {
 
 // Start fplayer implementation
 
-fplayer::fplayer() : m_stoprequested(false), m_running(false) {
+fplayer::fplayer() : m_stoprequested(false) {
 	pthread_mutex_init(&m_mutex, NULL);
 	engine_started = false;
 
@@ -39,9 +39,6 @@ fplayer::~fplayer() {
 void fplayer::play(char* filename, JNIEnv *env, jobject obj,
 		jmethodID callback) {
 
-	if (m_running != false) {
-		return;
-	}
 
 	stream_url = filename;
 	stream_callback = callback;
@@ -49,8 +46,6 @@ void fplayer::play(char* filename, JNIEnv *env, jobject obj,
 	stream_env = env;
 
 	__android_log_print(ANDROID_LOG_DEBUG, TAG, "START THREAD");
-	assert(m_running == false);
-	m_running = true;
 	m_stoprequested = false;
 	__android_log_print(ANDROID_LOG_DEBUG, TAG, "Ready to create");
 	do_play();
@@ -70,12 +65,7 @@ void* fplayer::start_thread(void *obj) {
 
 
 int fplayer::stop() {
-	if (m_running != true) {
-		return 0;
-	}
 	__android_log_print(ANDROID_LOG_DEBUG, TAG, "STOP THREAD");
-	assert(m_running == true);
-	m_running = false;
 	m_stoprequested = true;
 	int ret_val;
 
@@ -159,6 +149,7 @@ int fplayer::do_play() {
 	}
 
 	__android_log_print(ANDROID_LOG_DEBUG, TAG, "avformat_open_input: %s", stream_url);
+  pFormatCtx = NULL;
 
 	status = avformat_open_input(&pFormatCtx, stream_url, file_iformat, options);
 	if (status != 0) {
@@ -304,9 +295,7 @@ int fplayer::do_play() {
 	avcodec_close(codecCtx);
 	avformat_free_context(pFormatCtx);
 
-	if (m_stoprequested) {
-		getJavaVM()->DetachCurrentThread();
-	}
+	// only for async thread: if (m_stoprequested) getJavaVM()->DetachCurrentThread();
 
 	return 0;
 

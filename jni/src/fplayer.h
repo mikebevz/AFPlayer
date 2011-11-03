@@ -42,7 +42,7 @@ private:
 	/**
 	 * Is stream thread running
 	 */
-	volatile bool m_running;
+	// only for async thread: volatile bool m_running;
 
 
 	pthread_mutex_t m_mutex;

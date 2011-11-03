@@ -48,10 +48,10 @@ public class MediaPlayer {
 
 	/**
 	 * Create a new instance of MediaPlayer to play stream back
-	 * 
+	 *
 	 * @param context Activity context
 	 * @param uri URI of the media resource, fx, a stream
-	 * 
+	 *
 	 * @return MediaPlayer
 	 */
 	public static MediaPlayer create(Context context, Uri uri) {
@@ -67,12 +67,12 @@ public class MediaPlayer {
 
 	/**
 	 * Set data source to be played back
-	 * 
+	 *
 	 * @param context
 	 *            Activity context
 	 * @param uri
 	 *            URI of the media resource
-	 * 
+	 *
 	 * @throws IllegalStateException
 	 */
 	private void setDataSource(Context context, Uri uri)
@@ -92,12 +92,12 @@ public class MediaPlayer {
 
 	/**
 	 * Create MediaPlayer instance to play local file
-	 * 
+	 *
 	 * @param context
 	 *            Activity context
 	 * @param resource
 	 *            Media file resource id
-	 * 
+	 *
 	 * @return MediaPlayer
 	 */
 	public static MediaPlayer create(Context context, int resource) {
@@ -107,17 +107,29 @@ public class MediaPlayer {
 
 	/**
 	 * Start playing stream back
-	 * 
+	 *
 	 * @throws IllegalStateException
 	 */
 	public void start() throws IllegalStateException {
 		stopRequested = false;
-		n_playStream();
+
+    Runnable r = new Runnable() {
+     public void run() {
+      Log.d(TAG, "PlayThread: invoking n_playStream... ");
+      n_playStream();
+      Log.d(TAG, "PlayThread: n_playStream finished.");
+     }
+   };
+
+    Thread playThread = new Thread(r);
+    playThread.start();
+
 	}
+
 
 	/**
 	 * Shutdown engine and release all variables
-	 * 
+	 *
 	 * @throws IllegalStateException
 	 */
 	public void release() throws IllegalStateException {
@@ -127,14 +139,14 @@ public class MediaPlayer {
 	public boolean isPlaying() {
 		return isPlaying;
 	}
-	
+
 	private void setPlaying(boolean status) {
-		isPlaying = status; 
+		isPlaying = status;
 	}
 
 	/**
 	 * Stop playback
-	 * 
+	 *
 	 * @throws IllegalStateException
 	 */
 	public void stop() throws IllegalStateException {
@@ -148,7 +160,7 @@ public class MediaPlayer {
 
 	/**
 	 * Set up what needs to be set up in JNI
-	 * 
+	 *
 	 * @param mplayer
 	 *            Reference to MediaPlayer
 	 */
@@ -156,7 +168,7 @@ public class MediaPlayer {
 
 	/**
 	 * Set data source - stream url for now
-	 * 
+	 *
 	 * @param path
 	 *            Stream URL
 	 */
@@ -164,7 +176,7 @@ public class MediaPlayer {
 
 	/**
 	 * Start playing stream back
-	 * 
+	 *
 	 */
 	public native void n_playStream();
 
@@ -180,19 +192,19 @@ public class MediaPlayer {
 
 	/**
 	 * Method called from JNI
-	 * 
+	 *
 	 * @param data
 	 *            Byte Array with decompressed data
 	 * @param length
 	 *            Length of the data in the array
-	 * 
+	 *
 	 */
 	public int streamCallback(byte[] data, int length) {
-		
+
 		if (!isPlaying()) {
 			setPlaying(true);
 		}
-		
+
 		Log.d(TAG, "Received " + data.length + " byte wher we use " + length);
 
 		int result = track.write(data, 0, length);
@@ -200,13 +212,13 @@ public class MediaPlayer {
 			Log.e(TAG, "Cannot write to AudioTrack. Ret Code: " + result);
 			return 1;
 		}
-		
+
 		if (stopRequested) return 1;
-		
+
 		return 0;
 
 	}
 
-	
+
 
 }
