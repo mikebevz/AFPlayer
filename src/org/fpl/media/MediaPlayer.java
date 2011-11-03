@@ -40,7 +40,6 @@ public class MediaPlayer {
 				AudioFormat.ENCODING_PCM_16BIT, 176400, // minBufSize * 8,
 				AudioTrack.MODE_STREAM);
 
-		track.play();
 
 		n_createEngine(new WeakReference<MediaPlayer>(this));
 
@@ -112,6 +111,7 @@ public class MediaPlayer {
 	 */
 	public void start() throws IllegalStateException {
 		stopRequested = false;
+		track.play();
 
     Runnable r = new Runnable() {
      public void run() {
@@ -152,6 +152,7 @@ public class MediaPlayer {
 	public void stop() throws IllegalStateException {
 		//n_stopStream();
 		stopRequested = true;
+    track.stop();
 	}
 
 	public void prepare() throws IllegalStateException {
