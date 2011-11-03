@@ -24,6 +24,7 @@ public class MediaPlayer {
 	}
 
 	private boolean isPlaying;
+	private boolean stopRequested;
 
 	public MediaPlayer() {
 		Log.d(TAG, "Create new MediaPlayer");
@@ -110,7 +111,7 @@ public class MediaPlayer {
 	 * @throws IllegalStateException
 	 */
 	public void start() throws IllegalStateException {
-		
+		stopRequested = false;
 		n_playStream();
 	}
 
@@ -137,7 +138,8 @@ public class MediaPlayer {
 	 * @throws IllegalStateException
 	 */
 	public void stop() throws IllegalStateException {
-		n_stopStream();
+		//n_stopStream();
+		stopRequested = true;
 	}
 
 	public void prepare() throws IllegalStateException {
@@ -185,7 +187,7 @@ public class MediaPlayer {
 	 *            Length of the data in the array
 	 * 
 	 */
-	public void streamCallback(byte[] data, int length) {
+	public int streamCallback(byte[] data, int length) {
 		
 		if (!isPlaying()) {
 			setPlaying(true);
@@ -196,8 +198,12 @@ public class MediaPlayer {
 		int result = track.write(data, 0, length);
 		if (result == AudioTrack.ERROR_INVALID_OPERATION || result != length) {
 			Log.e(TAG, "Cannot write to AudioTrack. Ret Code: " + result);
-			return;
+			return 1;
 		}
+		
+		if (stopRequested) return 1;
+		
+		return 0;
 
 	}
 

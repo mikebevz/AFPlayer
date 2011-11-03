@@ -26,35 +26,102 @@ public:
 	fplayer();
 	~fplayer();
 	void play(char* filename, JNIEnv *env, jobject obj, jmethodID callback);
-	void stop();
+	int stop();
 	int start_engine();
 	int shutdown_engine();
 
 
 
 private:
+
+	/**
+	 * Is stream stop was requested
+	 */
 	volatile bool m_stoprequested;
+
+	/**
+	 * Is stream thread running
+	 */
 	volatile bool m_running;
+
+
 	pthread_mutex_t m_mutex;
+
+	/**
+	 * Stream playback thread id
+	 */
 	pthread_t m_thread;
+
+	/**
+	 * Is the audio engine was already initialized
+	 */
 	bool engine_started;
+
+	/**
+	 * Audio stream URI
+	 */
 	char *stream_url;
+
+	/**
+	 * TODO Consider if these are needed
+	 */
 	_jmethodID *stream_callback;
 	_jobject *stream_object;
-
-	AVFormatContext *pFormatCtx;
-	AVInputFormat *file_iformat;
-	AVDictionary **options;
-	AVCodecContext *codecCtx;
-	AVCodec *codec;
-	AVPacket avpkt;
-	int OUT_BUFFER_SIZE;
-	char* samples;
     JNIEnv *stream_env;
 
-	//int rc;
+
+    AVFormatContext *pFormatCtx;
+    AVInputFormat *file_iformat;
+    AVDictionary **options;
+    AVCodecContext *codecCtx;
+    AVCodec *codec;
+    AVPacket avpkt;
+
+    static const int ERROR_NO_STREAM_ADDRESS = -1020;
+    /**
+     * Playback has been already started
+     */
+    static const int ERROR_ALREADY_STARTED = -1021;
+    /**
+     * Playback has been already stopped
+     */
+    static const int ERROR_ALREADY_STOPPED = -1022;
+    /**
+     * Cannot open stream
+     */
+    static const int ERROR_CANNOT_OPEN_STREAM = -1023;
+    /**
+     * Cannot read stream info
+     */
+    static const int ERROR_CANNOT_READ_STREAM_INFO = -1024;
+    /**
+     * Stream sanity check failed
+     */
+    static const int ERROR_STREAM_SANITY_CHECK_FAILED = -1025;
+    /**
+     * Cannot obtain codec
+     */
+    static const int ERROR_CANNOT_OBTAIN_CODEC = -1026;
+    /**
+     * Stream doesn't include codec info
+     */
+    static const int ERROR_NO_CODEC_INFO = -1027;
+
+    /**
+     * Current codec is not supported
+     */
+    static const int ERROR_CODEC_NOT_SUPPORTED = -1028;
+
+    /**
+     * Start a new thread
+     * @param obj
+     */
 	static void* start_thread(void *obj);
-	void do_play();
+
+	/**
+	 * Perform stream playback
+	 */
+	int do_play();
 };
 
 #else
