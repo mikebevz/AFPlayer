@@ -25,6 +25,7 @@ public class MediaPlayer {
 
 	private boolean isPlaying;
 	private boolean stopRequested;
+  public boolean addBuzzTone = true;
 
 	public MediaPlayer() {
 		Log.d(TAG, "Create new MediaPlayer");
@@ -153,7 +154,7 @@ public class MediaPlayer {
 		//n_stopStream();
 		track.stop();
 		stopRequested = true;
-		
+
 	}
 
 	public void prepare() throws IllegalStateException {
@@ -208,6 +209,10 @@ public class MediaPlayer {
 		}
 
 		Log.d(TAG, "Received " + data.length + " byte wher we use " + length);
+
+    if (addBuzzTone) {
+      for (int i=0; i<length; i+=151) data[i] += i%5*15;
+    }
 
 		int result = track.write(data, 0, length);
 		if (result == AudioTrack.ERROR_INVALID_OPERATION || result != length) {
