@@ -45,7 +45,7 @@ public class FPlayerActivity extends Activity implements OnClickListener {
 
 	@Override
 	protected void onDestroy() {
-		
+
 		if (mp.isPlaying()) {
 			mp.stop();
 		}

@@ -9,7 +9,8 @@ import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.net.Uri;
-import android.util.Log;
+import dk.nordfalk.netradio.Log;
+//import android.util.Log;
 
 public class MediaPlayer {
 

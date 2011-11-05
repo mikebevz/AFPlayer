@@ -49,7 +49,7 @@ public class Afspiller_akt extends Activity implements OnClickListener {
   private Button spilKnap;
   private Button stopKnap;*/
   Log log = new Log();
-  private CheckBox scrollCb;
+  private CheckBox addBuzzTone;
   //private Spinner kanalSpinner;
   private String[][] kanaler = {
 //    {"P1 rtsp LQ", "rtsp://live-rtsp.dr.dk/rtplive/_definst_/Channel3_LQ.stream"},
@@ -69,6 +69,7 @@ public class Afspiller_akt extends Activity implements OnClickListener {
   private boolean spiller;
   private String url;
   private MediaPlayer mp;
+  private CheckBox scrollCb;
 
   /** Called when the activity is first created. */
   @Override
@@ -79,12 +80,12 @@ public class Afspiller_akt extends Activity implements OnClickListener {
     setVolumeControlStream(AudioManager.STREAM_MUSIC);
 
     if (savedInstanceState == null) {
-      // skru op til 2/3 styrke hvis volumen er lavere end det
+      // skru op til 1/4 styrke hvis volumen er lavere end det
       AudioManager audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
       int max = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
       int nu = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
-      if (nu < 2 * max / 3) {
-        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 2 * max / 3, AudioManager.FLAG_SHOW_UI);
+      if (nu < 1 * max / 4) {
+        audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 1 * max / 4, AudioManager.FLAG_SHOW_UI);
       }
     }
 
@@ -107,6 +108,29 @@ public class Afspiller_akt extends Activity implements OnClickListener {
 
 
     LinearLayout række = new LinearLayout(this);
+    scrollCb = new CheckBox(this);
+    scrollCb.setText("Scroll");
+    scrollCb.setEnabled(Log.scroll_tv_til_bund);
+    scrollCb.setOnClickListener(new OnClickListener() {
+      public void onClick(View arg0) {
+        Log.scroll_tv_til_bund = scrollCb.isChecked();
+      }
+    });
+    scrollCb.setId(10012);
+    række.addView(scrollCb);
+
+
+    addBuzzTone = new CheckBox(this);
+    addBuzzTone.setText("addBuzzTone");
+    addBuzzTone.setEnabled(Log.scroll_tv_til_bund);
+    addBuzzTone.setOnClickListener(new OnClickListener() {
+      public void onClick(View arg0) {
+        mp.addBuzzTone = addBuzzTone.isChecked();
+      }
+    });
+    addBuzzTone.setId(10012);
+    række.addView(addBuzzTone);
+
     virkerTv = new TextView(this);
     virkerTv.setText("\n..virker..\n(prøv i 2 min)");
     række.addView(virkerTv);
@@ -117,16 +141,6 @@ public class Afspiller_akt extends Activity implements OnClickListener {
 
 
     række = new LinearLayout(this);
-    scrollCb = new CheckBox(this);
-    scrollCb.setText("Scroll");
-    scrollCb.setEnabled(Log.scroll_tv_til_bund);
-    scrollCb.setOnClickListener(new OnClickListener() {
-      public void onClick(View arg0) {
-        Log.scroll_tv_til_bund = scrollCb.isChecked();
-      }
-    });
-    scrollCb.setId(10012);
-    //række.addView(scrollCb);
     /*
     spilKnap = new Button(this);
     spilKnap.setText("Spil");
@@ -139,11 +153,12 @@ public class Afspiller_akt extends Activity implements OnClickListener {
     række.addView(stopKnap);
      */
 
-
+    /*
     sendKnap = new Button(this);
     sendKnap.setText("Send\nrapport");
     sendKnap.setOnClickListener(this);
     række.addView(sendKnap);
+     */
 
 
     statusTv = new TextView(this);
