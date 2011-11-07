@@ -9,7 +9,9 @@ import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.net.Uri;
-import android.util.Log;
+import dk.nordfalk.netradio.Log;
+
+//import android.util.Log;
 
 public class MediaPlayer {
 
@@ -25,6 +27,7 @@ public class MediaPlayer {
 
 	private boolean isPlaying;
 	private boolean stopRequested;
+	public boolean addBuzzTone = true;
 
 	public MediaPlayer() {
 		Log.d(TAG, "Create new MediaPlayer");
@@ -209,7 +212,10 @@ public class MediaPlayer {
 
 		Log.d(TAG, "Received " + data.length + " byte wher we use " + length);
 
-		// Log.d(TAG, "Track buffer: "+track)
+		if (addBuzzTone) {
+			for (int i = 0; i < length; i += 151)
+				data[i] += i % 5 * 15;
+		}
 
 		int result = track.write(data, 0, length);
 		if (result == AudioTrack.ERROR_INVALID_OPERATION || result != length) {

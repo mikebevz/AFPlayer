@@ -5,7 +5,8 @@ import java.io.IOException;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
-import android.util.Log;
+import dk.nordfalk.netradio.Log;
+//import android.util.Log;
 
 public class Manager {
 
@@ -45,7 +46,7 @@ public class Manager {
 				AudioTrack.MODE_STREAM);
 		// track.play();
 
-	} 
+	}
 
 	public native void createEngine();
 
@@ -70,7 +71,7 @@ public class Manager {
 			Log.d("Manager", "bytesWritten " + overallBytes);
 
 			if (!started && overallBytes > minBufSize*4) {
-				
+
 				track.play();
 				started = true;
 				Log.d("Manager", "Start playing!!! Yea");
