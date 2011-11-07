@@ -37,9 +37,8 @@ public class MediaPlayer {
 
 		track = new AudioTrack(AudioManager.STREAM_MUSIC, 44100,
 				AudioFormat.CHANNEL_CONFIGURATION_STEREO,
-				AudioFormat.ENCODING_PCM_16BIT, 176400, // minBufSize * 8,
+				AudioFormat.ENCODING_PCM_16BIT, 88016, // minBufSize*2,
 				AudioTrack.MODE_STREAM);
-
 
 		n_createEngine(new WeakReference<MediaPlayer>(this));
 
@@ -47,10 +46,12 @@ public class MediaPlayer {
 
 	/**
 	 * Create a new instance of MediaPlayer to play stream back
-	 *
-	 * @param context Activity context
-	 * @param uri URI of the media resource, fx, a stream
-	 *
+	 * 
+	 * @param context
+	 *            Activity context
+	 * @param uri
+	 *            URI of the media resource, fx, a stream
+	 * 
 	 * @return MediaPlayer
 	 */
 	public static MediaPlayer create(Context context, Uri uri) {
@@ -58,7 +59,7 @@ public class MediaPlayer {
 
 		MediaPlayer mp = new MediaPlayer();
 		mp.setDataSource(context, uri);
-		//mp.prepare(); Not needed yet. Is here for compatibility
+		// mp.prepare(); Not needed yet. Is here for compatibility
 
 		return mp;
 
@@ -66,12 +67,12 @@ public class MediaPlayer {
 
 	/**
 	 * Set data source to be played back
-	 *
+	 * 
 	 * @param context
 	 *            Activity context
 	 * @param uri
 	 *            URI of the media resource
-	 *
+	 * 
 	 * @throws IllegalStateException
 	 */
 	private void setDataSource(Context context, Uri uri)
@@ -91,12 +92,12 @@ public class MediaPlayer {
 
 	/**
 	 * Create MediaPlayer instance to play local file
-	 *
+	 * 
 	 * @param context
 	 *            Activity context
 	 * @param resource
 	 *            Media file resource id
-	 *
+	 * 
 	 * @return MediaPlayer
 	 */
 	public static MediaPlayer create(Context context, int resource) {
@@ -106,30 +107,29 @@ public class MediaPlayer {
 
 	/**
 	 * Start playing stream back
-	 *
+	 * 
 	 * @throws IllegalStateException
 	 */
 	public void start() throws IllegalStateException {
 		stopRequested = false;
+
+		Runnable r = new Runnable() {
+			public void run() {
+				Log.d(TAG, "PlayThread: invoking n_playStream... ");
+				n_playStream();
+				Log.d(TAG, "PlayThread: n_playStream finished.");
+			}
+		};
+
+		Thread playThread = new Thread(r);
+		playThread.start();
 		track.play();
-
-    Runnable r = new Runnable() {
-     public void run() {
-      Log.d(TAG, "PlayThread: invoking n_playStream... ");
-      n_playStream();
-      Log.d(TAG, "PlayThread: n_playStream finished.");
-     }
-   };
-
-    Thread playThread = new Thread(r);
-    playThread.start();
 
 	}
 
-
 	/**
 	 * Shutdown engine and release all variables
-	 *
+	 * 
 	 * @throws IllegalStateException
 	 */
 	public void release() throws IllegalStateException {
@@ -146,14 +146,14 @@ public class MediaPlayer {
 
 	/**
 	 * Stop playback
-	 *
+	 * 
 	 * @throws IllegalStateException
 	 */
 	public void stop() throws IllegalStateException {
-		//n_stopStream();
+		// n_stopStream();
 		track.stop();
 		stopRequested = true;
-		
+
 	}
 
 	public void prepare() throws IllegalStateException {
@@ -162,7 +162,7 @@ public class MediaPlayer {
 
 	/**
 	 * Set up what needs to be set up in JNI
-	 *
+	 * 
 	 * @param mplayer
 	 *            Reference to MediaPlayer
 	 */
@@ -170,7 +170,7 @@ public class MediaPlayer {
 
 	/**
 	 * Set data source - stream url for now
-	 *
+	 * 
 	 * @param path
 	 *            Stream URL
 	 */
@@ -178,7 +178,7 @@ public class MediaPlayer {
 
 	/**
 	 * Start playing stream back
-	 *
+	 * 
 	 */
 	public native void n_playStream();
 
@@ -194,12 +194,12 @@ public class MediaPlayer {
 
 	/**
 	 * Method called from JNI
-	 *
+	 * 
 	 * @param data
 	 *            Byte Array with decompressed data
 	 * @param length
 	 *            Length of the data in the array
-	 *
+	 * 
 	 */
 	public int streamCallback(byte[] data, int length) {
 
@@ -209,18 +209,19 @@ public class MediaPlayer {
 
 		Log.d(TAG, "Received " + data.length + " byte wher we use " + length);
 
+		// Log.d(TAG, "Track buffer: "+track)
+
 		int result = track.write(data, 0, length);
 		if (result == AudioTrack.ERROR_INVALID_OPERATION || result != length) {
 			Log.e(TAG, "Cannot write to AudioTrack. Ret Code: " + result);
 			return 1;
 		}
 
-		if (stopRequested) return 1;
+		if (stopRequested)
+			return 1;
 
 		return 0;
 
 	}
-
-
 
 }

@@ -120,7 +120,7 @@ int fplayer::do_play() {
 
 
 
-	int OUT_BUFFER_SIZE = AVCODEC_MAX_AUDIO_FRAME_SIZE * 4;
+	int OUT_BUFFER_SIZE = AVCODEC_MAX_AUDIO_FRAME_SIZE * 8;
 	char* samples = (char *) av_malloc(OUT_BUFFER_SIZE);
 
 
@@ -133,23 +133,20 @@ int fplayer::do_play() {
 
 	int status;
 
-	__android_log_print(ANDROID_LOG_DEBUG, TAG, "status");
-
 
 	const char format[] = "applehttp";
-
 
 	__android_log_print(ANDROID_LOG_DEBUG, TAG, "Start Stream");
 	__android_log_print(ANDROID_LOG_DEBUG, TAG, stream_url);
 
 	if (!(file_iformat = av_find_input_format(format))) {
-		__android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot find format: %s",
-				format);
-		pthread_exit(&m_thread);
+		__android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot find format: %s", format);
+		return ERROR_CANNOT_FIND_FORMAT;
 	}
 
 	__android_log_print(ANDROID_LOG_DEBUG, TAG, "avformat_open_input: %s", stream_url);
-  pFormatCtx = NULL;
+
+	pFormatCtx = NULL;
 
 	status = avformat_open_input(&pFormatCtx, stream_url, file_iformat, options);
 	if (status != 0) {
@@ -218,10 +215,11 @@ int fplayer::do_play() {
 	__android_log_print(ANDROID_LOG_DEBUG, TAG, "before start read frame");
 
 	while (av_read_frame(pFormatCtx, &avpkt) >= 0) {
-		//pthread_mutex_lock(&m_mutex);
+
+		//__android_log_print(ANDROID_LOG_DEBUG, TAG, "PacketBuffer: %d", pFormatCtx->raw_packet_buffer_remaining_size);
+
 		if (codecCtx->codec_type == AVMEDIA_TYPE_AUDIO) {
 
-			__android_log_print(ANDROID_LOG_DEBUG, TAG, "start reading frame");
 
 			int frame_size_ptr = OUT_BUFFER_SIZE;
 			int size = avpkt.size;
@@ -237,6 +235,7 @@ int fplayer::do_play() {
 
 
 			while (size > 0) {
+				//codecCtx->
 				int len = avcodec_decode_audio3(codecCtx, (int16_t *) samples, &frame_size_ptr, &avpkt);
 				if (len < 0) {
 					__android_log_print(ANDROID_LOG_ERROR, TAG, "Error while decoding. Status/len: %d. Size: %d", len, size);
