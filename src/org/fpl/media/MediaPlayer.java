@@ -1,5 +1,6 @@
 package org.fpl.media;
 
+import android.os.Handler;
 import java.lang.ref.WeakReference;
 
 import org.fpl.ffmpeg.Manager;
@@ -18,7 +19,7 @@ public class MediaPlayer {
 	private static Manager manager;
 	private static String streamUrl;
 	private static int minBufSize;
-	private static AudioTrack track;
+	public static AudioTrack track;
 
 	static {
 		System.loadLibrary("player");
@@ -26,7 +27,8 @@ public class MediaPlayer {
 
 	private boolean isPlaying;
 	private boolean stopRequested;
-  public boolean addBuzzTone = true;
+  public boolean addBuzzTone = false;
+  public Handler handler;
 
 	public MediaPlayer() {
 		Log.d(TAG, "Create new MediaPlayer");
@@ -41,6 +43,7 @@ public class MediaPlayer {
 				AudioFormat.CHANNEL_CONFIGURATION_STEREO,
 				AudioFormat.ENCODING_PCM_16BIT, 176400, // minBufSize * 8,
 				AudioTrack.MODE_STREAM);
+
 
 
 		n_createEngine(new WeakReference<MediaPlayer>(this));
@@ -194,6 +197,9 @@ public class MediaPlayer {
 	 */
 	public native void n_shutdownEngine();
 
+  public Runnable runWhenstreamCallbackStart;
+  public Runnable runWhenstreamCallbackEnd;
+
 	/**
 	 * Method called from JNI
 	 *
@@ -204,24 +210,39 @@ public class MediaPlayer {
 	 *
 	 */
 	public int streamCallback(byte[] data, int length) {
+		if (stopRequested) {
+      isPlaying = false;
+      return 1;
+    }
 
 		if (!isPlaying()) {
 			setPlaying(true);
 		}
 
-		Log.d(TAG, "Received " + data.length + " byte wher we use " + length);
-
     if (addBuzzTone) {
       for (int i=0; i<length; i+=151) data[i] += i%5*15;
     }
 
-		int result = track.write(data, 0, length);
+    if (handler != null && runWhenstreamCallbackStart != null) {
+      handler.post(runWhenstreamCallbackStart);
+    }
+
+
+    long start = System.currentTimeMillis();
+
+    int result = track.write(data, 0, length);
+
+    long slut = System.currentTimeMillis();
+		Log.d(TAG, "Wrote " + length + " byte to AudioTrack in "+ (slut-start)+ " ms");
 		if (result == AudioTrack.ERROR_INVALID_OPERATION || result != length) {
 			Log.e(TAG, "Cannot write to AudioTrack. Ret Code: " + result);
 			return 1;
 		}
 
-		if (stopRequested) return 1;
+    if (handler != null && runWhenstreamCallbackEnd != null) {
+      handler.post(runWhenstreamCallbackEnd);
+    }
+
 
 		return 0;
 

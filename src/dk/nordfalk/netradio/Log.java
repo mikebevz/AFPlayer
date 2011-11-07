@@ -112,7 +112,7 @@ public class Log {
 	}
 
   public static void log(Object o) {
-//    android.util.Log.d("XXX", ""+o);
+    android.util.Log.d("XXX", ""+o);
     System.out.println(o);
   }
 
