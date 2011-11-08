@@ -187,7 +187,7 @@ public class Afspiller_akt extends Activity implements OnClickListener {
 
   public void onClick(View v) {
     try {
-      if (mp==null || !mp.isPlaying()) {
+      if (mp==null) {
         int kanalNr = kanalSpinner.getSelectedItemPosition();
         String navn = kanaler[kanalNr][0];
         url = kanaler[kanalNr][1];

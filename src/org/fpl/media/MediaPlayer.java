@@ -3,7 +3,6 @@ package org.fpl.media;
 import android.os.Handler;
 import java.lang.ref.WeakReference;
 
-import org.fpl.ffmpeg.Manager;
 
 import android.content.Context;
 import android.media.AudioFormat;
@@ -16,9 +15,6 @@ import dk.nordfalk.netradio.Log;
 public class MediaPlayer {
 
 	private final static String TAG = "MediaPlayer";
-	private static Manager manager;
-	private static String streamUrl;
-	private static int minBufSize;
 	public static AudioTrack track;
 
 	static {
@@ -29,21 +25,29 @@ public class MediaPlayer {
 	private boolean stopRequested;
   public boolean addBuzzTone = false;
   public Handler handler;
+  private final int bytesPerSecond;
 
 	public MediaPlayer() {
 		Log.d(TAG, "Create new MediaPlayer");
+    int sampleRateInHz = 44100;
+    int channelConfig = AudioFormat.CHANNEL_CONFIGURATION_STEREO;
+    int audioFormat = AudioFormat.ENCODING_PCM_16BIT;
 
-		minBufSize = AudioTrack.getMinBufferSize(44100,
-				AudioFormat.CHANNEL_CONFIGURATION_STEREO,
-				AudioFormat.ENCODING_PCM_16BIT);
+    int minBufSize = AudioTrack.getMinBufferSize(sampleRateInHz, channelConfig, audioFormat);
+    if (minBufSize<=0) throw new InternalError("Buffer size error: "+minBufSize);
 
-		Log.d("Manager", "Buffer size: " + String.valueOf(minBufSize));
+    int bufferSize = 176400; // minBufSize * 8
+		track = new AudioTrack(AudioManager.STREAM_MUSIC,
+            sampleRateInHz, channelConfig, audioFormat,
+            bufferSize, AudioTrack.MODE_STREAM);
 
-		track = new AudioTrack(AudioManager.STREAM_MUSIC, 44100,
-				AudioFormat.CHANNEL_CONFIGURATION_STEREO,
-				AudioFormat.ENCODING_PCM_16BIT, 176400, // minBufSize * 8,
-				AudioTrack.MODE_STREAM);
+    bytesPerSecond = track.getChannelCount() * track.getSampleRate() *
+            (track.getAudioFormat() == AudioFormat.ENCODING_PCM_16BIT ? 2 : 1);
 
+		Log.d("X "+bytesPerSecond+ "  "+track.getChannelCount()+ "  "+track.getSampleRate()+ "  "+track.getAudioFormat());
+
+		Log.d("Manager", "Buffer size - min: " + minBufSize+ "  - ("+ minBufSize*1000/bytesPerSecond+" msecs)");
+		Log.d("Manager", "Buffer size - act: " + bufferSize+ "  - ("+ bufferSize*1000/bytesPerSecond+" msecs)");
 
 
 		n_createEngine(new WeakReference<MediaPlayer>(this));
@@ -63,7 +67,7 @@ public class MediaPlayer {
 
 		MediaPlayer mp = new MediaPlayer();
 		mp.setDataSource(context, uri);
-		//mp.prepare(); Not needed yet. Is here for compatibility
+		mp.prepare();// Not needed yet. Is here for compatibility
 
 		return mp;
 
@@ -79,34 +83,18 @@ public class MediaPlayer {
 	 *
 	 * @throws IllegalStateException
 	 */
-	private void setDataSource(Context context, Uri uri)
+	public void setDataSource(Context context, Uri uri)
 			throws IllegalStateException {
 
 		String scheme = uri.getScheme();
 		if (scheme == null || scheme.equals("file")) {
 			// TODO Implement file playback
-			Log.d(TAG, "File given");
-			return;
+			throw new IllegalArgumentException("File given "+uri);
 		}
 
 		n_setDataSource(uri.toString()); // Play path of stream
 		return;
 
-	}
-
-	/**
-	 * Create MediaPlayer instance to play local file
-	 *
-	 * @param context
-	 *            Activity context
-	 * @param resource
-	 *            Media file resource id
-	 *
-	 * @return MediaPlayer
-	 */
-	public static MediaPlayer create(Context context, int resource) {
-
-		return null;
 	}
 
 	/**
@@ -156,13 +144,13 @@ public class MediaPlayer {
 	 */
 	public void stop() throws IllegalStateException {
 		//n_stopStream();
-		track.stop();
+    if (track.getState() == AudioTrack.STATE_INITIALIZED) track.stop();
 		stopRequested = true;
 
 	}
 
+  /** Not needed. Is here for compatibility */
 	public void prepare() throws IllegalStateException {
-
 	}
 
 	/**
