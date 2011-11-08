@@ -205,6 +205,7 @@ public class MediaPlayer {
 	 *
 	 */
 	public int streamCallback(byte[] data, int length) {
+      Log.d(TAG, "Buffer er " + bytesInBuffer + ", dvs "+ (1.0f*bytesInBuffer/bytesPerSecond)+ " sek");
     try {
       if (stopRequested) {
         isPlaying = false;
