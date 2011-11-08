@@ -221,7 +221,7 @@ int fplayer::do_play() {
 		//pthread_mutex_lock(&m_mutex);
 		if (codecCtx->codec_type == AVMEDIA_TYPE_AUDIO) {
 
-			__android_log_print(ANDROID_LOG_DEBUG, TAG, "start reading frame");
+			//__android_log_print(ANDROID_LOG_DEBUG, TAG, "start reading frame");
 
 			int frame_size_ptr = OUT_BUFFER_SIZE;
 			int size = avpkt.size;

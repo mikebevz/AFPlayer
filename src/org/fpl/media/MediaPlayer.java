@@ -10,6 +10,8 @@ import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.net.Uri;
 import dk.nordfalk.netradio.Log;
+import java.util.ArrayList;
+import java.util.LinkedList;
 //import android.util.Log;
 
 public class MediaPlayer {
@@ -26,6 +28,11 @@ public class MediaPlayer {
   public boolean addBuzzTone = false;
   public Handler handler;
   private final int bytesPerSecond;
+  private final int preferredBufferInSeconds = 10;
+
+  public LinkedList<byte[]> buffersInUse = new LinkedList<byte[]>();
+  public int bytesInBuffer = 0;
+  public ArrayList<byte[]> buffersNotInUse = new ArrayList<byte[]>();
 
 	public MediaPlayer() {
 		Log.d(TAG, "Create new MediaPlayer");
@@ -37,6 +44,7 @@ public class MediaPlayer {
     if (minBufSize<=0) throw new InternalError("Buffer size error: "+minBufSize);
 
     int bufferSize = 176400; // minBufSize * 8
+    //int bufferSize = 86016;
 		track = new AudioTrack(AudioManager.STREAM_MUSIC,
             sampleRateInHz, channelConfig, audioFormat,
             bufferSize, AudioTrack.MODE_STREAM);
@@ -104,7 +112,6 @@ public class MediaPlayer {
 	 */
 	public void start() throws IllegalStateException {
 		stopRequested = false;
-		track.play();
 
     Runnable r = new Runnable() {
      public void run() {
@@ -144,7 +151,7 @@ public class MediaPlayer {
 	 */
 	public void stop() throws IllegalStateException {
 		//n_stopStream();
-    if (track.getState() == AudioTrack.STATE_INITIALIZED) track.stop();
+    if (isPlaying) track.stop();
 		stopRequested = true;
 
 	}
@@ -198,43 +205,75 @@ public class MediaPlayer {
 	 *
 	 */
 	public int streamCallback(byte[] data, int length) {
-		if (stopRequested) {
-      isPlaying = false;
-      return 1;
+    try {
+      if (stopRequested) {
+        isPlaying = false;
+        return 1;
+      }
+
+      if (addBuzzTone) {
+        for (int i=0; i<length; i+=151) data[i] += i%5*15;
+      }
+
+      byte[] buf = getFreeBuffer(length);
+      System.arraycopy(data, 0, buf, 0, length);
+      buffersInUse.add(buf);
+      bytesInBuffer += length;
+
+      if (!isPlaying()) {
+
+        if (bytesInBuffer < preferredBufferInSeconds*bytesPerSecond) {
+          return 0; // Not enough data, still bufferring
+        }
+
+        // Enough data - start playing
+        track.play();
+        setPlaying(true);
+      }
+
+
+      if (handler != null && runWhenstreamCallbackStart != null) {
+        handler.post(runWhenstreamCallbackStart);
+      }
+
+
+      long start = System.currentTimeMillis();
+
+      byte[] buff = buffersInUse.removeFirst();
+      buffersNotInUse.add(buff);
+      bytesInBuffer -= buff.length;
+
+      int result = track.write(buff, 0, buff.length);
+
+      long slut = System.currentTimeMillis();
+      Log.d(TAG, "Wrote " + length + " byte to AudioTrack in "+ (slut-start)+ " ms");
+      if (result == AudioTrack.ERROR_INVALID_OPERATION || result != length) {
+        Log.e(TAG, "Cannot write to AudioTrack. Ret Code: " + result);
+        return 1;
+      }
+
+      return 0;
+
+    } finally {
+      if (handler != null && runWhenstreamCallbackEnd != null) {
+        handler.post(runWhenstreamCallbackEnd);
+      }
     }
-
-		if (!isPlaying()) {
-			setPlaying(true);
-		}
-
-    if (addBuzzTone) {
-      for (int i=0; i<length; i+=151) data[i] += i%5*15;
-    }
-
-    if (handler != null && runWhenstreamCallbackStart != null) {
-      handler.post(runWhenstreamCallbackStart);
-    }
-
-
-    long start = System.currentTimeMillis();
-
-    int result = track.write(data, 0, length);
-
-    long slut = System.currentTimeMillis();
-		Log.d(TAG, "Wrote " + length + " byte to AudioTrack in "+ (slut-start)+ " ms");
-		if (result == AudioTrack.ERROR_INVALID_OPERATION || result != length) {
-			Log.e(TAG, "Cannot write to AudioTrack. Ret Code: " + result);
-			return 1;
-		}
-
-    if (handler != null && runWhenstreamCallbackEnd != null) {
-      handler.post(runWhenstreamCallbackEnd);
-    }
-
-
-		return 0;
-
 	}
+
+  private byte[] getFreeBuffer(int length) {
+    int n = buffersNotInUse.size();
+    while (--n>0) {
+      byte[] b = buffersNotInUse.get(n);
+      if (b.length == length) {
+        buffersNotInUse.remove(n);
+        Log.d("getFreeBuffer genbruger "+b);
+        return b;
+      }
+    }
+    Log.d("getFreeBuffer OPRETTER NY");
+    return new byte[length];
+  }
 
 
 
