@@ -69,7 +69,7 @@ public class Afspiller_akt extends Activity implements OnClickListener {
   String[] afspilningskvalitetNavn = { "-", "Godt", "Afbrydelser", "Virker ikke!" };
 
   private TextView statusTv;
-  private TextView virkerTv;
+  private TextView bufferstr;
   private Spinner kanalSpinner;
   private boolean spiller;
   private String url;
@@ -139,7 +139,6 @@ public class Afspiller_akt extends Activity implements OnClickListener {
 
     addBuzzTone = new CheckBox(this);
     addBuzzTone.setText("addBuzzTone");
-    addBuzzTone.setEnabled(Log.scroll_tv_til_bund);
     addBuzzTone.setOnClickListener(new OnClickListener() {
       public void onClick(View arg0) {
         mp.addBuzzTone = addBuzzTone.isChecked();
@@ -148,10 +147,9 @@ public class Afspiller_akt extends Activity implements OnClickListener {
     addBuzzTone.setId(10012);
     række.addView(addBuzzTone);
 
-    //virkerTv = new TextView(this);
-    //virkerTv.setText("\n..virker..\n(prøv i 2 min)");
-    //række.addView(virkerTv);
-    //((LinearLayout.LayoutParams) virkerTv.getLayoutParams()).weight = 1;
+    bufferstr = new TextView(this);
+    bufferstr.setText("bufferstr");
+    række.addView(bufferstr);
 
 
     tl.addView(række);
@@ -213,17 +211,20 @@ public class Afspiller_akt extends Activity implements OnClickListener {
 
         visStatus(url);
         mp = MediaPlayer.create(this, Uri.parse(url));
-        mp.runWhenstreamCallbackStart = new Runnable() {
+
+        mp.runWhenstreamCallback = new Runnable() {
           public void run() {
             statusTv.setBackgroundColor(Color.RED);
+            bufferstr.setText("Buffer:\n"+mp.sink.bufferInSecs()+" sek");
           }
         };
-        mp.runWhenstreamCallbackEnd = new Runnable() {
+        mp.sink.runWhenPcmAudioSinkWrite = new Runnable() {
           public void run() {
             statusTv.setBackgroundColor(Color.BLACK);
+            bufferstr.setText("Buffer:\n"+mp.sink.bufferInSecs()+" sek");
           }
         };
-        mp.handler = new Handler();
+        mp.sink.handler = new Handler();
         mp.sink.track.setPlaybackPositionUpdateListener(new OnPlaybackPositionUpdateListener() {
           public void onMarkerReached(AudioTrack arg0) {
             Log.d("XXXXXXXX onMarkerReached "+arg0.getPlaybackHeadPosition());
@@ -232,16 +233,14 @@ public class Afspiller_akt extends Activity implements OnClickListener {
           public void onPeriodicNotification(AudioTrack arg0) {
             Log.d("XXXXXX onPeriodicNotification ");
           }
-        }, mp.handler);
+        }, mp.sink.handler);
         Log.d("XXXXXX .setPlaybackPositionUpdateListener ");
         mp.start();
 
-        /*
-        // MEGET hacky måde at holde telefonen vågen på!!!!!!
+        // meget MEGET hacky måde at holde telefonen vågen på!!!!!!
         androidMp = android.media.MediaPlayer.create(this, Uri.parse(url));
         androidMp.setVolume(0.1f, 0.1f);
         androidMp.start();
-         */
         holdTelefonVågen.acquire();
         cm.startUsingNetworkFeature(ConnectivityManager.TYPE_WIFI, null);
         startStopKnap.setText("Stop");

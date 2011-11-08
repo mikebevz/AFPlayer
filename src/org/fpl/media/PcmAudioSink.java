@@ -7,9 +7,10 @@ package org.fpl.media;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
+import android.os.Handler;
 import dk.nordfalk.netradio.Log;
 import java.util.ArrayList;
-import java.util.LinkedList;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  *
@@ -17,11 +18,14 @@ import java.util.LinkedList;
  */
 public class PcmAudioSink {
 
+  public Handler handler;
+  public Runnable runWhenPcmAudioSinkWrite;
+
 	public static AudioTrack track;
   final int bytesPerSecond;
   final int preferredBufferInSeconds = 10;
 
-  public LinkedList<byte[]> buffersInUse = new LinkedList<byte[]>();
+  public LinkedBlockingQueue<byte[]> buffersInUse = new LinkedBlockingQueue<byte[]>();
   public int bytesInBuffer = 0;
   public ArrayList<byte[]> buffersNotInUse = new ArrayList<byte[]>();
   int result;
@@ -68,24 +72,56 @@ public class PcmAudioSink {
   void putData(byte[] data, int length) {
     byte[] buf = getFreeBuffer(length);
     System.arraycopy(data, 0, buf, 0, length);
-    buffersInUse.add(buf);
+    try {
+      //Virker ikke: boolean taken = buffersInUse.offer(buf, 1000, TimeUnit.MILLISECONDS);
+      boolean taken = buffersInUse.offer(buf);
+      if (!taken) throw new IllegalStateException(" not taken ??!?");
+    } catch (Exception ex) {
+      Log.e(ex);
+      result = -1;
+    }
     bytesInBuffer += length;
   }
 
   void startPlay() {
     track.play();
+    Runnable r = new Runnable() {
+      public void run() {
+        while (!stop) try {
+          write();
+        } catch (InterruptedException ex) {
+          Log.e(ex);
+          result = -1;
+        }
+      }
+    };
+    new Thread(r).start();
   }
 
-  void write() {
+  private void write() throws InterruptedException {
     long start = System.currentTimeMillis();
 
-    byte[] buff = buffersInUse.removeFirst();
+    byte[] buff = buffersInUse.take();
+    result = track.write(buff, 0, buff.length);
+    long slut = System.currentTimeMillis();
+    Log.d("Wrote " + buff.length + " byte to AudioTrack in "+ (slut-start)+ " ms");
+
     buffersNotInUse.add(buff);
     bytesInBuffer -= buff.length;
 
-    result = track.write(buff, 0, buff.length);
+    if (handler != null && runWhenPcmAudioSinkWrite != null) {
+      handler.post(runWhenPcmAudioSinkWrite);
+    }
+  }
 
-    long slut = System.currentTimeMillis();
-    Log.d("Wrote " + buff.length + " byte to AudioTrack in "+ (slut-start)+ " ms");
+  boolean stop = false;
+  void stopPlay() {
+    stop = true;
+    track.release();
+  }
+
+  public String bufferInSecs() {
+    return Float.toString((10*bytesInBuffer/bytesPerSecond)/10f);
+
   }
 }
