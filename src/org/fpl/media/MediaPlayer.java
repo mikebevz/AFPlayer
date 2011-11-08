@@ -5,19 +5,14 @@ import java.lang.ref.WeakReference;
 
 
 import android.content.Context;
-import android.media.AudioFormat;
-import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.net.Uri;
 import dk.nordfalk.netradio.Log;
-import java.util.ArrayList;
-import java.util.LinkedList;
 //import android.util.Log;
 
 public class MediaPlayer {
 
 	private final static String TAG = "MediaPlayer";
-	public static AudioTrack track;
 
 	static {
 		System.loadLibrary("player");
@@ -27,35 +22,12 @@ public class MediaPlayer {
 	private boolean stopRequested;
   public boolean addBuzzTone = false;
   public Handler handler;
-  private final int bytesPerSecond;
-  private final int preferredBufferInSeconds = 10;
+  private Thread pcmProducerThread;
 
-  public LinkedList<byte[]> buffersInUse = new LinkedList<byte[]>();
-  public int bytesInBuffer = 0;
-  public ArrayList<byte[]> buffersNotInUse = new ArrayList<byte[]>();
+  public PcmAudioSink sink = new PcmAudioSink();
 
 	public MediaPlayer() {
 		Log.d(TAG, "Create new MediaPlayer");
-    int sampleRateInHz = 44100;
-    int channelConfig = AudioFormat.CHANNEL_CONFIGURATION_STEREO;
-    int audioFormat = AudioFormat.ENCODING_PCM_16BIT;
-
-    int minBufSize = AudioTrack.getMinBufferSize(sampleRateInHz, channelConfig, audioFormat);
-    if (minBufSize<=0) throw new InternalError("Buffer size error: "+minBufSize);
-
-    int bufferSize = 176400; // minBufSize * 8
-    //int bufferSize = 86016;
-		track = new AudioTrack(AudioManager.STREAM_MUSIC,
-            sampleRateInHz, channelConfig, audioFormat,
-            bufferSize, AudioTrack.MODE_STREAM);
-
-    bytesPerSecond = track.getChannelCount() * track.getSampleRate() *
-            (track.getAudioFormat() == AudioFormat.ENCODING_PCM_16BIT ? 2 : 1);
-
-		Log.d("X "+bytesPerSecond+ "  "+track.getChannelCount()+ "  "+track.getSampleRate()+ "  "+track.getAudioFormat());
-
-		Log.d("Manager", "Buffer size - min: " + minBufSize+ "  - ("+ minBufSize*1000/bytesPerSecond+" msecs)");
-		Log.d("Manager", "Buffer size - act: " + bufferSize+ "  - ("+ bufferSize*1000/bytesPerSecond+" msecs)");
 
 
 		n_createEngine(new WeakReference<MediaPlayer>(this));
@@ -121,8 +93,8 @@ public class MediaPlayer {
      }
    };
 
-    Thread playThread = new Thread(r);
-    playThread.start();
+    pcmProducerThread = new Thread(r);
+    pcmProducerThread.start();
 
 	}
 
@@ -151,7 +123,7 @@ public class MediaPlayer {
 	 */
 	public void stop() throws IllegalStateException {
 		//n_stopStream();
-    if (isPlaying) track.stop();
+    if (isPlaying) sink.track.stop();
 		stopRequested = true;
 
 	}
@@ -205,7 +177,7 @@ public class MediaPlayer {
 	 *
 	 */
 	public int streamCallback(byte[] data, int length) {
-      Log.d(TAG, "Buffer er " + bytesInBuffer + ", dvs "+ (1.0f*bytesInBuffer/bytesPerSecond)+ " sek");
+    Log.d(TAG, "Buffer er " + sink.bytesInBuffer + ", dvs "+ (1.0f*sink.bytesInBuffer/sink.bytesPerSecond)+ " sek");
     try {
       if (stopRequested) {
         isPlaying = false;
@@ -216,19 +188,16 @@ public class MediaPlayer {
         for (int i=0; i<length; i+=151) data[i] += i%5*15;
       }
 
-      byte[] buf = getFreeBuffer(length);
-      System.arraycopy(data, 0, buf, 0, length);
-      buffersInUse.add(buf);
-      bytesInBuffer += length;
+      sink.putData(data, length);
 
       if (!isPlaying()) {
 
-        if (bytesInBuffer < preferredBufferInSeconds*bytesPerSecond) {
+        if (sink.bytesInBuffer < sink.preferredBufferInSeconds*sink.bytesPerSecond) {
           return 0; // Not enough data, still bufferring
         }
 
         // Enough data - start playing
-        track.play();
+        sink.startPlay();
         setPlaying(true);
       }
 
@@ -237,19 +206,9 @@ public class MediaPlayer {
         handler.post(runWhenstreamCallbackStart);
       }
 
-
-      long start = System.currentTimeMillis();
-
-      byte[] buff = buffersInUse.removeFirst();
-      buffersNotInUse.add(buff);
-      bytesInBuffer -= buff.length;
-
-      int result = track.write(buff, 0, buff.length);
-
-      long slut = System.currentTimeMillis();
-      Log.d(TAG, "Wrote " + length + " byte to AudioTrack in "+ (slut-start)+ " ms");
-      if (result == AudioTrack.ERROR_INVALID_OPERATION || result != length) {
-        Log.e(TAG, "Cannot write to AudioTrack. Ret Code: " + result);
+      sink.write();
+      if (sink.result < 0) {
+        Log.e(TAG, "Cannot write to AudioTrack. Ret Code: " + sink.result);
         return 1;
       }
 
@@ -262,19 +221,6 @@ public class MediaPlayer {
     }
 	}
 
-  private byte[] getFreeBuffer(int length) {
-    int n = buffersNotInUse.size();
-    while (--n>0) {
-      byte[] b = buffersNotInUse.get(n);
-      if (b.length == length) {
-        buffersNotInUse.remove(n);
-        Log.d("getFreeBuffer genbruger "+b);
-        return b;
-      }
-    }
-    Log.d("getFreeBuffer OPRETTER NY");
-    return new byte[length];
-  }
 
 
 

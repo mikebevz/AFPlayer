@@ -22,9 +22,12 @@ import android.graphics.Color;
 import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.media.AudioTrack.OnPlaybackPositionUpdateListener;
+import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.PowerManager;
+import android.os.PowerManager.WakeLock;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
@@ -72,6 +75,9 @@ public class Afspiller_akt extends Activity implements OnClickListener {
   private String url;
   private MediaPlayer mp;
   private CheckBox scrollCb;
+  private WakeLock holdTelefonVågen;
+  private ConnectivityManager cm;
+  private android.media.MediaPlayer androidMp;
 
   /** Called when the activity is first created. */
   @Override
@@ -90,6 +96,14 @@ public class Afspiller_akt extends Activity implements OnClickListener {
         audioManager.setStreamVolume(AudioManager.STREAM_MUSIC, 1 * max / 4, AudioManager.FLAG_SHOW_UI);
       }
     }
+
+
+    PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+    //holdTelefonVågen = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, PROGRAMNAVN);
+    //holdTelefonVågen = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "afspiller");
+    holdTelefonVågen = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "afspiller");
+
+    cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
     tv = new TextView(this);
     tv.setId(100701);
@@ -170,6 +184,8 @@ public class Afspiller_akt extends Activity implements OnClickListener {
     sv.addView(tv);
     tl.addView(sv);
     setContentView(tl);
+
+    onClick(null);
   }
 
 
@@ -196,7 +212,7 @@ public class Afspiller_akt extends Activity implements OnClickListener {
         //Toast.makeText(Afspiller_akt.this, "Lad den køre 2 minutter før du bedømmer den", Toast.LENGTH_LONG).show();
 
         visStatus(url);
-        mp = MediaPlayer.create(Afspiller_akt.this, Uri.parse(url));
+        mp = MediaPlayer.create(this, Uri.parse(url));
         mp.runWhenstreamCallbackStart = new Runnable() {
           public void run() {
             statusTv.setBackgroundColor(Color.RED);
@@ -208,7 +224,7 @@ public class Afspiller_akt extends Activity implements OnClickListener {
           }
         };
         mp.handler = new Handler();
-        mp.track.setPlaybackPositionUpdateListener(new OnPlaybackPositionUpdateListener() {
+        mp.sink.track.setPlaybackPositionUpdateListener(new OnPlaybackPositionUpdateListener() {
           public void onMarkerReached(AudioTrack arg0) {
             Log.d("XXXXXXXX onMarkerReached "+arg0.getPlaybackHeadPosition());
           }
@@ -219,11 +235,23 @@ public class Afspiller_akt extends Activity implements OnClickListener {
         }, mp.handler);
         Log.d("XXXXXX .setPlaybackPositionUpdateListener ");
         mp.start();
+
+        /*
+        // MEGET hacky måde at holde telefonen vågen på!!!!!!
+        androidMp = android.media.MediaPlayer.create(this, Uri.parse(url));
+        androidMp.setVolume(0.1f, 0.1f);
+        androidMp.start();
+         */
+        holdTelefonVågen.acquire();
+        cm.startUsingNetworkFeature(ConnectivityManager.TYPE_WIFI, null);
         startStopKnap.setText("Stop");
       } else {
         mp.stop();
+        holdTelefonVågen.release();
+        cm.stopUsingNetworkFeature(ConnectivityManager.TYPE_WIFI, null);
         startStopKnap.setText("Play");
         mp = null;
+        if (androidMp != null) androidMp.release();
       }
     } catch (Exception e) {
       Log.e(e);
