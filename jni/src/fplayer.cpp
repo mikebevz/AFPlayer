@@ -258,9 +258,10 @@ int fplayer::do_play() {
 
 
 	}
-
+	char errstr[200];
+	int r=av_strerror(ret_status, errstr, 200);
 	//TODO Process return status from read frame
-	__android_log_print(ANDROID_LOG_DEBUG, TAG, "Returned status from frame read: %d %s (%s)",  ret_status, strerror(ret_status), strerror(-ret_status));
+	__android_log_print(ANDROID_LOG_DEBUG, TAG, "Returned status from frame read: %d %s (%d)",  ret_status, errstr, r);
 
 
 	if (outputBufferSize != -1) {
