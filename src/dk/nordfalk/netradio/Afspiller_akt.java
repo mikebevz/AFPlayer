@@ -216,12 +216,14 @@ public class Afspiller_akt extends Activity implements OnClickListener {
         mp.runWhenstreamCallback = new Runnable() {
           public void run() {
             statusTv.setBackgroundColor(Color.RED);
+            if (mp==null) return;
             bufferstr.setText("Buffer:\n"+mp.sink.bufferInSecs()+" sek");
           }
         };
         mp.sink.runWhenPcmAudioSinkWrite = new Runnable() {
           public void run() {
             statusTv.setBackgroundColor(Color.BLACK);
+            if (mp==null) return;
             bufferstr.setText("Buffer:\n"+mp.sink.bufferInSecs()+" sek");
           }
         };
