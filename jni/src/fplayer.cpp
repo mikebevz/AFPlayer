@@ -26,6 +26,15 @@ extern "C" {
 #include "media_player.h"
 #include "fplayer.h"
 
+
+void debug_log(const char *msg, int code) {
+	char errstr[200];
+	int r=av_strerror(code, errstr, 200);
+
+	__android_log_print(ANDROID_LOG_DEBUG, TAG, "%s (%d): %s", msg, code, errstr);
+
+}
+
 // Start fplayer implementation
 
 fplayer::fplayer() :
@@ -82,6 +91,8 @@ int fplayer::shutdown_engine() {
 	return 0;
 }
 
+
+
 int fplayer::do_play() {
 	/*
 	 while (!m_stoprequested) {
@@ -95,8 +106,7 @@ int fplayer::do_play() {
 	char* samples = (char *) av_malloc(OUT_BUFFER_SIZE);
 
 	if (stream_url == NULL) {
-		__android_log_print(ANDROID_LOG_DEBUG, TAG,
-				"Stream address is not defined");
+		debug_log("Stream URL is not defined", NULL);
 		//pthread_exit(&m_thread);
 		return ERROR_NO_STREAM_ADDRESS;
 	}
@@ -120,7 +130,9 @@ int fplayer::do_play() {
 
 	status = avformat_open_input(&pFormatCtx, stream_url, NULL, options);
 	if (status != 0) {
-		__android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot open stream. Status: %d", status);
+
+		debug_log("Cannot open stream.", status);
+		//__android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot open stream. Status: %d", status);
 		return ERROR_CANNOT_OPEN_STREAM;
 	}
 
