@@ -101,9 +101,8 @@ public class Afspiller_akt extends Activity implements OnClickListener {
 
 
     PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-    //holdTelefonVågen = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, PROGRAMNAVN);
-    //holdTelefonVågen = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "afspiller");
-    holdTelefonVågen = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "afspiller");
+    holdTelefonVågen = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "afspiller");
+    //holdTelefonVågen = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "afspiller");
 
     cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
 
@@ -239,17 +238,19 @@ public class Afspiller_akt extends Activity implements OnClickListener {
         Log.d("XXXXXX .setPlaybackPositionUpdateListener ");
         mp.start();
 
+        /*
         // meget MEGET hacky måde at holde telefonen vågen på!!!!!!
         androidMp = android.media.MediaPlayer.create(this, Uri.parse(url));
         androidMp.setVolume(0.1f, 0.1f);
         androidMp.start();
-        holdTelefonVågen.acquire();
-        cm.startUsingNetworkFeature(ConnectivityManager.TYPE_WIFI, null);
-        startStopKnap.setText("Stop");
+         */
+        if (holdTelefonVågen!=null) holdTelefonVågen.acquire();
+        //cm.startUsingNetworkFeature(ConnectivityManager.TYPE_WIFI, null);
+        startStopKnap.setText("Stopx");
       } else {
         mp.stop();
-        holdTelefonVågen.release();
-        cm.stopUsingNetworkFeature(ConnectivityManager.TYPE_WIFI, null);
+        if (holdTelefonVågen!=null) holdTelefonVågen.release();
+        //cm.stopUsingNetworkFeature(ConnectivityManager.TYPE_WIFI, null);
         startStopKnap.setText("Play");
         mp = null;
         if (androidMp != null) androidMp.release();
