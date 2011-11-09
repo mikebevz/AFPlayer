@@ -9,4 +9,4 @@ gen/
 local.properties
 /nbandroid/
 /ant.properties
-/jni/xxx.map
+jni/xxx.map

@@ -194,8 +194,9 @@ int fplayer::do_play() {
 	m_stoprequested = false;
 
 	__android_log_print(ANDROID_LOG_DEBUG, TAG, "before start read frame");
+	int ret_status;
 
-	while (av_read_frame(pFormatCtx, &avpkt) >= 0) {
+	while ((ret_status = av_read_frame(pFormatCtx, &avpkt)) == 0) {
 
 		if (codecCtx->codec_type == AVMEDIA_TYPE_AUDIO && avpkt.stream_index == audioStream) {
 
@@ -253,7 +254,14 @@ int fplayer::do_play() {
 			av_free_packet(&avpkt);
 
 		}
+
+
+
 	}
+
+	//TODO Process return status from read frame
+	__android_log_print(ANDROID_LOG_DEBUG, TAG, "Returned status from frame read: %d %s (%s)",  ret_status, strerror(ret_status), strerror(-ret_status));
+
 
 	if (outputBufferSize != -1) {
 		stream_env->ReleaseByteArrayElements(array, outputBuffer, NULL);
@@ -261,7 +269,7 @@ int fplayer::do_play() {
 		outputBufferSize = -1;
 	}
 
-	free(samples);
+	av_free(samples);
 	avcodec_close(codecCtx);
 	avformat_free_context(pFormatCtx);
 
