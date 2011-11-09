@@ -99,12 +99,13 @@ public class PcmAudioSink {
   }
 
   private void write() throws InterruptedException {
-    long start = System.currentTimeMillis();
 
+    long start = System.currentTimeMillis();
     byte[] buff = buffersInUse.take();
+    long tage = System.currentTimeMillis();
     result = track.write(buff, 0, buff.length);
     long slut = System.currentTimeMillis();
-    Log.d("Wrote " + buff.length + " byte to AudioTrack in "+ (slut-start)+ " ms");
+    Log.d("AudioTrack.write in "+ (slut-tage)+ " ms (wait"+(start-tage)+" ms)" );
 
     buffersNotInUse.add(buff);
     bytesInBuffer -= buff.length;
