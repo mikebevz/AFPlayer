@@ -2,20 +2,16 @@ package org.fpl.media;
 
 import java.lang.ref.WeakReference;
 
-import org.fpl.ffmpeg.Manager;
-
 import android.content.Context;
 import android.media.AudioFormat;
 import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.net.Uri;
 import dk.nordfalk.netradio.Log;
-//import android.util.Log;
 
 public class MediaPlayer {
 
 	private final static String TAG = "MediaPlayer";
-	private static Manager manager;
 	private static String streamUrl;
 	private static int minBufSize;
 	private static AudioTrack track;
