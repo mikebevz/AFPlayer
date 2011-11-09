@@ -20,6 +20,7 @@ extern "C" {
 #include <libavcodec/avcodec.h>
 #include <libavformat/avformat.h>
 #include <libavdevice/avdevice.h>
+
 }
 
 #include "media_player.h"
@@ -29,13 +30,13 @@ extern "C" {
 
 fplayer::fplayer() :
 		m_stoprequested(false) {
-	pthread_mutex_init(&m_mutex, NULL);
+	//pthread_mutex_init(&m_mutex, NULL);
 	engine_started = false;
 
 }
 
 fplayer::~fplayer() {
-	pthread_mutex_destroy(&m_mutex);
+	//pthread_mutex_destroy(&m_mutex);
 }
 
 void fplayer::play(char* filename, JNIEnv *env, jobject obj,
@@ -101,7 +102,7 @@ int fplayer::do_play() {
 	}
 
 	int status;
-
+	/*
 	const char format[] = "applehttp";
 
 	__android_log_print(ANDROID_LOG_DEBUG, TAG, "Start Stream");
@@ -110,18 +111,16 @@ int fplayer::do_play() {
 	if (!(file_iformat = av_find_input_format(format))) {
 		__android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot find format: %s", format);
 		return ERROR_CANNOT_FIND_FORMAT;
-	}
+	}*/
 
 	__android_log_print(ANDROID_LOG_DEBUG, TAG, "avformat_open_input: %s",
 			stream_url);
 
 	pFormatCtx = NULL;
 
-	status = avformat_open_input(&pFormatCtx, stream_url, NULL,
-			options);
+	status = avformat_open_input(&pFormatCtx, stream_url, NULL, options);
 	if (status != 0) {
-		__android_log_print(ANDROID_LOG_ERROR, TAG,
-				"Cannot open stream. Status: %d", status);
+		__android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot open stream. Status: %d", status);
 		return ERROR_CANNOT_OPEN_STREAM;
 	}
 
@@ -142,13 +141,14 @@ int fplayer::do_play() {
 		return ERROR_STREAM_SANITY_CHECK_FAILED;
 	}
 
-
+	/*
 	for (int i = 0; i < pFormatCtx->nb_streams; ++i) {
 		__android_log_print(ANDROID_LOG_DEBUG, TAG, "Found stream ID: %d", pFormatCtx->streams[i]->id);
 		//av_dict_get(pFormatCtx->streams[i]->metadata, "", )
-	}
+	}*/
 
 	// Find audio stream
+	//TODO selects only first stream
 	int audioStream;
 	for (int i = 0; i < pFormatCtx->nb_streams; i++) {
 		if (pFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO) {
@@ -199,7 +199,7 @@ int fplayer::do_play() {
 
 		if (codecCtx->codec_type == AVMEDIA_TYPE_AUDIO && avpkt.stream_index == audioStream) {
 
-			int frame_size_ptr = OUT_BUFFER_SIZE;
+			int frame_size = OUT_BUFFER_SIZE;
 			int size = avpkt.size;
 			if (size == 0) {
 				__android_log_print(ANDROID_LOG_ERROR, TAG, "Packet size is 0: %d", size);
@@ -212,7 +212,7 @@ int fplayer::do_play() {
 			}
 
 			while (size > 0) {
-				int len = avcodec_decode_audio3(codecCtx, (short *) samples, &frame_size_ptr, &avpkt);
+				int len = avcodec_decode_audio3(codecCtx, (short *) samples, &frame_size, &avpkt);
 				if (len < 0) {
 					__android_log_print(ANDROID_LOG_ERROR, TAG, "Error while decoding. Status/len: %d. Size: %d", len, size);
 					break;
@@ -226,13 +226,12 @@ int fplayer::do_play() {
 				}
 
 				// Flush the buffer to Java if it's full
-				if (outputBufferPos + frame_size_ptr > outputBufferSize) {
+				if (outputBufferPos + frame_size > outputBufferSize) {
 					__android_log_print( ANDROID_LOG_DEBUG,
-							TAG, "outputBufferPos=%d. frame_size_ptr=%d. outputBufferSize=%d", outputBufferPos, frame_size_ptr, outputBufferSize);
+							TAG, "outputBufferPos=%d. frame_size_ptr=%d. outputBufferSize=%d", outputBufferPos, frame_size, outputBufferSize);
 
 					stream_env->ExceptionClear();
-					int ret = stream_env->CallIntMethod(stream_object,
-							stream_callback, array, outputBufferPos);
+					int ret = stream_env->CallIntMethod(stream_object, stream_callback, array, outputBufferPos);
 
 					if (ret == 1) { // STOP-signal
 						m_stoprequested = true;
@@ -246,9 +245,8 @@ int fplayer::do_play() {
 					}
 				}
 
-				memcpy((outputBuffer + outputBufferPos), (int16_t *) samples,
-						frame_size_ptr);
-				outputBufferPos += frame_size_ptr;
+				memcpy((outputBuffer + outputBufferPos), (int16_t *) samples, frame_size);
+				outputBufferPos += frame_size;
 				size -= len;
 			}
 

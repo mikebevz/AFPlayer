@@ -15,6 +15,10 @@
  */
 package dk.nordfalk.netradio;
 
+import java.util.ArrayList;
+
+import org.fpl.media.MediaPlayer;
+
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
@@ -39,8 +43,6 @@ import android.widget.Spinner;
 import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
-import java.util.ArrayList;
-import org.fpl.media.MediaPlayer;
 
 /**
  *

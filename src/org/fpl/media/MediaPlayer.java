@@ -21,6 +21,7 @@ public class MediaPlayer {
 	private boolean isPlaying;
 	private boolean stopRequested;
   public boolean addBuzzTone = false;
+  public Handler handler;
   private Thread pcmProducerThread;
 
   public PcmAudioSink sink = new PcmAudioSink();
@@ -89,7 +90,6 @@ public class MediaPlayer {
       Log.d(TAG, "PlayThread: invoking n_playStream... ");
       n_playStream();
       Log.d(TAG, "PlayThread: n_playStream finished.");
-      sink.stopPlay();
      }
    };
 
@@ -164,7 +164,8 @@ public class MediaPlayer {
 	 */
 	public native void n_shutdownEngine();
 
-  public Runnable runWhenstreamCallback;
+  public Runnable runWhenstreamCallbackStart;
+  public Runnable runWhenstreamCallbackEnd;
 
 	/**
 	 * Method called from JNI
@@ -176,7 +177,7 @@ public class MediaPlayer {
 	 *
 	 */
 	public int streamCallback(byte[] data, int length) {
-    Log.d(TAG, "Buffer er " + sink.bytesInBuffer + ", dvs "+ sink.bufferInSecs()+ " sek");
+    Log.d(TAG, "Buffer er " + sink.bytesInBuffer + ", dvs "+ (1.0f*sink.bytesInBuffer/sink.bytesPerSecond)+ " sek");
     try {
       if (stopRequested) {
         isPlaying = false;
@@ -201,10 +202,11 @@ public class MediaPlayer {
       }
 
 
-      if (sink.handler != null && runWhenstreamCallback != null) {
-        sink.handler.post(runWhenstreamCallback);
+      if (handler != null && runWhenstreamCallbackStart != null) {
+        handler.post(runWhenstreamCallbackStart);
       }
 
+      sink.write();
       if (sink.result < 0) {
         Log.e(TAG, "Cannot write to AudioTrack. Ret Code: " + sink.result);
         return 1;
@@ -213,6 +215,9 @@ public class MediaPlayer {
       return 0;
 
     } finally {
+      if (handler != null && runWhenstreamCallbackEnd != null) {
+        handler.post(runWhenstreamCallbackEnd);
+      }
     }
 	}
 
