@@ -18,9 +18,16 @@ package dk.nordfalk.netradio;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.media.AudioManager;
+import android.media.AudioTrack;
+import android.media.AudioTrack.OnPlaybackPositionUpdateListener;
+import android.net.ConnectivityManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.PowerManager;
+import android.os.PowerManager.WakeLock;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.ArrayAdapter;
@@ -42,34 +49,35 @@ import org.fpl.media.MediaPlayer;
 public class Afspiller_akt extends Activity implements OnClickListener {
 
 
-  private Button startStopButton;
+  private Button startStopKnap;
   private TextView tv;
   private Button sendKnap;
-  /*
-  private Button spilKnap;
-  private Button stopKnap;*/
   Log log = new Log();
   private CheckBox addBuzzTone;
   //private Spinner kanalSpinner;
   private String[][] kanaler = {
-//    {"P1 rtsp LQ", "rtsp://live-rtsp.dr.dk/rtplive/_definst_/Channel3_LQ.stream"},
     {"P3 rtsp LQ", "rtsp://live-rtsp.dr.dk/rtplive/_definst_/Channel5_LQ.stream"},
-//    {"Sverige P1 rtsp ", "rtsp://mobil-live.sr.se/mobilradio/kanaler/p1-aac-96"},
     {"Sverige P3 rtsp", "rtsp://mobil-live.sr.se/mobilradio/kanaler/p3-aac-96"},
     {"P3 mp3 ICE LQ", "http://live-icy.gss.dr.dk:8000/Channel5_LQ.mp3"},
-    {"P3 httplive", "http://live-http.gss.dr.dk/streaming/audio/channel5.m3u8"},
+//    {"P3 httplive", "httplive://live-http.gss.dr.dk/streaming/audio/channel5.m3u8"},
     {"P3 http(live)2", "http://live-http.gss.dr.dk/streaming/audio/channel5.m3u8"},
+    {"Mikes URL", "http://live-http.gss.dr.dk/streaming/audio/Channel21/Channel21_LQ0.m3u8"},
+
+
   };
   private int[] afspilningskvalitet = new int[kanaler.length];
   String[] afspilningskvalitetNavn = { "-", "Godt", "Afbrydelser", "Virker ikke!" };
 
   private TextView statusTv;
-  private TextView virkerTv;
+  private TextView bufferstr;
   private Spinner kanalSpinner;
   private boolean spiller;
   private String url;
   private MediaPlayer mp;
   private CheckBox scrollCb;
+  private WakeLock holdTelefonVågen;
+  private ConnectivityManager cm;
+  private android.media.MediaPlayer androidMp;
 
   /** Called when the activity is first created. */
   @Override
@@ -89,6 +97,14 @@ public class Afspiller_akt extends Activity implements OnClickListener {
       }
     }
 
+
+    PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
+    //holdTelefonVågen = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, PROGRAMNAVN);
+    //holdTelefonVågen = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "afspiller");
+    holdTelefonVågen = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "afspiller");
+
+    cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
+
     tv = new TextView(this);
     tv.setId(100701);
     log.systemOutToTextView(tv);
@@ -103,6 +119,7 @@ public class Afspiller_akt extends Activity implements OnClickListener {
     kanalSpinner = new Spinner(this);
     kanalSpinner.setId(1008);
     kanalSpinner.setAdapter(new ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, android.R.id.text1, elem.toArray(new String[0])));
+    kanalSpinner.setSelection(elem.size()-1);
     tl.addView(kanalSpinner);
     //række.addView(kanalSpinner);
 
@@ -110,7 +127,7 @@ public class Afspiller_akt extends Activity implements OnClickListener {
     LinearLayout række = new LinearLayout(this);
     scrollCb = new CheckBox(this);
     scrollCb.setText("Scroll");
-    scrollCb.setEnabled(Log.scroll_tv_til_bund);
+    scrollCb.setSelected(Log.scroll_tv_til_bund);
     scrollCb.setOnClickListener(new OnClickListener() {
       public void onClick(View arg0) {
         Log.scroll_tv_til_bund = scrollCb.isChecked();
@@ -122,7 +139,6 @@ public class Afspiller_akt extends Activity implements OnClickListener {
 
     addBuzzTone = new CheckBox(this);
     addBuzzTone.setText("addBuzzTone");
-    addBuzzTone.setEnabled(Log.scroll_tv_til_bund);
     addBuzzTone.setOnClickListener(new OnClickListener() {
       public void onClick(View arg0) {
         mp.addBuzzTone = addBuzzTone.isChecked();
@@ -131,27 +147,15 @@ public class Afspiller_akt extends Activity implements OnClickListener {
     addBuzzTone.setId(10012);
     række.addView(addBuzzTone);
 
-    virkerTv = new TextView(this);
-    virkerTv.setText("\n..virker..\n(prøv i 2 min)");
-    række.addView(virkerTv);
-    ((LinearLayout.LayoutParams) virkerTv.getLayoutParams()).weight = 1;
+    bufferstr = new TextView(this);
+    bufferstr.setText("bufferstr");
+    række.addView(bufferstr);
 
 
     tl.addView(række);
 
 
     række = new LinearLayout(this);
-    /*
-    spilKnap = new Button(this);
-    spilKnap.setText("Spil");
-    spilKnap.setOnClickListener(this);
-    række.addView(spilKnap);
-
-    stopKnap = new Button(this);
-    stopKnap.setText("Stop");
-    stopKnap.setOnClickListener(this);
-    række.addView(stopKnap);
-     */
 
     /*
     sendKnap = new Button(this);
@@ -167,40 +171,19 @@ public class Afspiller_akt extends Activity implements OnClickListener {
 
     tl.addView(række);
 
-    startStopButton = new Button(this);
-    startStopButton.setId(1010);
-    tl.addView(startStopButton);
-    startStopButton.setText("Play");
-    startStopButton.setOnClickListener(new OnClickListener() {
-      public void onClick(View v) {
-        try {
-          if (mp==null || !mp.isPlaying()) {
-            int kanalNr = kanalSpinner.getSelectedItemPosition();
-            String navn = kanaler[kanalNr][0];
-            url = kanaler[kanalNr][1];
-            Log.d("Afspiller " + navn + " med URL:\n" + url);
-            Toast.makeText(Afspiller_akt.this, "Spiller " + navn, Toast.LENGTH_LONG).show();
-            Toast.makeText(Afspiller_akt.this, "Lad den køre 2 minutter før du bedømmer den", Toast.LENGTH_LONG).show();
-
-            visStatus(url);
-        		mp = MediaPlayer.create(Afspiller_akt.this, Uri.parse(url));
-            mp.start();
-            startStopButton.setText("Stop");
-          } else {
-            mp.stop();
-            startStopButton.setText("Play");
-          }
-        } catch (Exception e) {
-          Log.e(e);
-        }
-      }
-    });
+    startStopKnap = new Button(this);
+    startStopKnap.setId(1010);
+    tl.addView(startStopKnap);
+    startStopKnap.setText("Spil");
+    startStopKnap.setOnClickListener(this);
 
     ScrollView sv = new ScrollView(this);
     sv.setId(10011);
     sv.addView(tv);
     tl.addView(sv);
     setContentView(tl);
+
+    onClick(null);
   }
 
 
@@ -217,6 +200,61 @@ public class Afspiller_akt extends Activity implements OnClickListener {
 
 
   public void onClick(View v) {
+    try {
+      if (mp==null) {
+        int kanalNr = kanalSpinner.getSelectedItemPosition();
+        String navn = kanaler[kanalNr][0];
+        url = kanaler[kanalNr][1];
+        Log.d("Afspiller " + navn + " med URL:\n" + url);
+        Toast.makeText(Afspiller_akt.this, "Spiller " + navn, Toast.LENGTH_LONG).show();
+        //Toast.makeText(Afspiller_akt.this, "Lad den køre 2 minutter før du bedømmer den", Toast.LENGTH_LONG).show();
+
+        visStatus(url);
+        mp = MediaPlayer.create(this, Uri.parse(url));
+
+        mp.runWhenstreamCallback = new Runnable() {
+          public void run() {
+            statusTv.setBackgroundColor(Color.RED);
+            bufferstr.setText("Buffer:\n"+mp.sink.bufferInSecs()+" sek");
+          }
+        };
+        mp.sink.runWhenPcmAudioSinkWrite = new Runnable() {
+          public void run() {
+            statusTv.setBackgroundColor(Color.BLACK);
+            bufferstr.setText("Buffer:\n"+mp.sink.bufferInSecs()+" sek");
+          }
+        };
+        mp.sink.handler = new Handler();
+        mp.sink.track.setPlaybackPositionUpdateListener(new OnPlaybackPositionUpdateListener() {
+          public void onMarkerReached(AudioTrack arg0) {
+            Log.d("XXXXXXXX onMarkerReached "+arg0.getPlaybackHeadPosition());
+          }
+
+          public void onPeriodicNotification(AudioTrack arg0) {
+            Log.d("XXXXXX onPeriodicNotification ");
+          }
+        }, mp.sink.handler);
+        Log.d("XXXXXX .setPlaybackPositionUpdateListener ");
+        mp.start();
+
+        // meget MEGET hacky måde at holde telefonen vågen på!!!!!!
+        androidMp = android.media.MediaPlayer.create(this, Uri.parse(url));
+        androidMp.setVolume(0.1f, 0.1f);
+        androidMp.start();
+        holdTelefonVågen.acquire();
+        cm.startUsingNetworkFeature(ConnectivityManager.TYPE_WIFI, null);
+        startStopKnap.setText("Stop");
+      } else {
+        mp.stop();
+        holdTelefonVågen.release();
+        cm.stopUsingNetworkFeature(ConnectivityManager.TYPE_WIFI, null);
+        startStopKnap.setText("Play");
+        mp = null;
+        if (androidMp != null) androidMp.release();
+      }
+    } catch (Exception e) {
+      Log.e(e);
+    }
   }
 
   @Override

@@ -1,20 +1,18 @@
 package org.fpl.media;
 
+import android.os.Handler;
 import java.lang.ref.WeakReference;
 
+
 import android.content.Context;
-import android.media.AudioFormat;
-import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.net.Uri;
 import dk.nordfalk.netradio.Log;
+//import android.util.Log;
 
 public class MediaPlayer {
 
 	private final static String TAG = "MediaPlayer";
-	private static String streamUrl;
-	private static int minBufSize;
-	private static AudioTrack track;
 
 	static {
 		System.loadLibrary("player");
@@ -22,21 +20,13 @@ public class MediaPlayer {
 
 	private boolean isPlaying;
 	private boolean stopRequested;
-  public boolean addBuzzTone = true;
+  public boolean addBuzzTone = false;
+  private Thread pcmProducerThread;
+
+  public PcmAudioSink sink = new PcmAudioSink();
 
 	public MediaPlayer() {
 		Log.d(TAG, "Create new MediaPlayer");
-
-		minBufSize = AudioTrack.getMinBufferSize(44100,
-				AudioFormat.CHANNEL_CONFIGURATION_STEREO,
-				AudioFormat.ENCODING_PCM_16BIT);
-
-		Log.d("Manager", "Buffer size: " + String.valueOf(minBufSize));
-
-		track = new AudioTrack(AudioManager.STREAM_MUSIC, 44100,
-				AudioFormat.CHANNEL_CONFIGURATION_STEREO,
-				AudioFormat.ENCODING_PCM_16BIT, 176400, // minBufSize * 8,
-				AudioTrack.MODE_STREAM);
 
 
 		n_createEngine(new WeakReference<MediaPlayer>(this));
@@ -56,7 +46,7 @@ public class MediaPlayer {
 
 		MediaPlayer mp = new MediaPlayer();
 		mp.setDataSource(context, uri);
-		//mp.prepare(); Not needed yet. Is here for compatibility
+		mp.prepare();// Not needed yet. Is here for compatibility
 
 		return mp;
 
@@ -72,34 +62,18 @@ public class MediaPlayer {
 	 *
 	 * @throws IllegalStateException
 	 */
-	private void setDataSource(Context context, Uri uri)
+	public void setDataSource(Context context, Uri uri)
 			throws IllegalStateException {
 
 		String scheme = uri.getScheme();
 		if (scheme == null || scheme.equals("file")) {
 			// TODO Implement file playback
-			Log.d(TAG, "File given");
-			return;
+			throw new IllegalArgumentException("File given "+uri);
 		}
 
 		n_setDataSource(uri.toString()); // Play path of stream
 		return;
 
-	}
-
-	/**
-	 * Create MediaPlayer instance to play local file
-	 *
-	 * @param context
-	 *            Activity context
-	 * @param resource
-	 *            Media file resource id
-	 *
-	 * @return MediaPlayer
-	 */
-	public static MediaPlayer create(Context context, int resource) {
-
-		return null;
 	}
 
 	/**
@@ -109,18 +83,18 @@ public class MediaPlayer {
 	 */
 	public void start() throws IllegalStateException {
 		stopRequested = false;
-		track.play();
 
     Runnable r = new Runnable() {
      public void run() {
       Log.d(TAG, "PlayThread: invoking n_playStream... ");
       n_playStream();
       Log.d(TAG, "PlayThread: n_playStream finished.");
+      sink.stopPlay();
      }
    };
 
-    Thread playThread = new Thread(r);
-    playThread.start();
+    pcmProducerThread = new Thread(r);
+    pcmProducerThread.start();
 
 	}
 
@@ -149,13 +123,13 @@ public class MediaPlayer {
 	 */
 	public void stop() throws IllegalStateException {
 		//n_stopStream();
-		track.stop();
+    if (isPlaying) sink.track.stop();
 		stopRequested = true;
 
 	}
 
+  /** Not needed. Is here for compatibility */
 	public void prepare() throws IllegalStateException {
-
 	}
 
 	/**
@@ -190,6 +164,8 @@ public class MediaPlayer {
 	 */
 	public native void n_shutdownEngine();
 
+  public Runnable runWhenstreamCallback;
+
 	/**
 	 * Method called from JNI
 	 *
@@ -200,28 +176,46 @@ public class MediaPlayer {
 	 *
 	 */
 	public int streamCallback(byte[] data, int length) {
+    Log.d(TAG, "Buffer er " + sink.bytesInBuffer + ", dvs "+ sink.bufferInSecs()+ " sek");
+    try {
+      if (stopRequested) {
+        isPlaying = false;
+        return 1;
+      }
 
-		if (!isPlaying()) {
-			setPlaying(true);
-		}
+      if (addBuzzTone) {
+        for (int i=0; i<length; i+=151) data[i] += i%5*15;
+      }
 
-		Log.d(TAG, "Received " + data.length + " byte wher we use " + length);
+      sink.putData(data, length);
 
-    if (addBuzzTone) {
-      for (int i=0; i<length; i+=151) data[i] += i%5*15;
+      if (!isPlaying()) {
+
+        if (sink.bytesInBuffer < sink.preferredBufferInSeconds*sink.bytesPerSecond) {
+          return 0; // Not enough data, still bufferring
+        }
+
+        // Enough data - start playing
+        sink.startPlay();
+        setPlaying(true);
+      }
+
+
+      if (sink.handler != null && runWhenstreamCallback != null) {
+        sink.handler.post(runWhenstreamCallback);
+      }
+
+      if (sink.result < 0) {
+        Log.e(TAG, "Cannot write to AudioTrack. Ret Code: " + sink.result);
+        return 1;
+      }
+
+      return 0;
+
+    } finally {
     }
-
-		int result = track.write(data, 0, length);
-		if (result == AudioTrack.ERROR_INVALID_OPERATION || result != length) {
-			Log.e(TAG, "Cannot write to AudioTrack. Ret Code: " + result);
-			return 1;
-		}
-
-		if (stopRequested) return 1;
-
-		return 0;
-
 	}
+
 
 
 

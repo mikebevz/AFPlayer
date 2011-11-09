@@ -91,18 +91,18 @@ public class Log {
 	}
 
   public static boolean scroll_tv_til_bund = true;
+  private int linjer = 0;
 
-	/**
-	 * Prints (appends) a text to a TextView.
-	 * It is safe to call this method even if the TextView is currently visible.
-	 * If the view is embedded in a ScrollView its scrolled down so the appended text is visible.
-	 * @param tv
-	 * @param text
-	 */
 	public void print(final TextView tv, final String text) {
 		handler.post(new Runnable() {
 			public void run() {
+        if (linjer++>1000) { // Nulstil for ikke at overbelaste GUI-tråd
+          tv.setText("");
+          linjer = 0;
+        }
 				tv.append(text);
+
+
         // scroll til bund
 				if (scroll_tv_til_bund && tv.getParent() instanceof ScrollView) {
             ScrollView sv = (ScrollView) tv.getParent();
@@ -113,7 +113,7 @@ public class Log {
 	}
 
   public static void log(Object o) {
-    android.util.Log.d("XXX", ""+o);
+    android.util.Log.d("JJJ", ""+o);
     System.out.println(o);
   }
 
