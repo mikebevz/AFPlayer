@@ -1,6 +1,5 @@
 package org.fpl;
 
-import org.fpl.ffmpeg.Manager;
 import org.fpl.media.MediaPlayer;
 
 import android.app.Activity;

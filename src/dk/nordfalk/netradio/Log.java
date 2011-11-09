@@ -28,8 +28,9 @@ public class Log {
   }
 
   /** Logfunktion uden TAG som tager et objekt. Sparer bytekode og tid */
-  public static void e(Object o) {
+  public static void e(Exception o) {
     log("e " + o);
+    o.printStackTrace();
   }
 
 
@@ -112,7 +113,7 @@ public class Log {
 	}
 
   public static void log(Object o) {
-//    android.util.Log.d("XXX", ""+o);
+    android.util.Log.d("XXX", ""+o);
     System.out.println(o);
   }
 

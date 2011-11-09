@@ -57,9 +57,8 @@ public class Afspiller_akt extends Activity implements OnClickListener {
 //    {"Sverige P1 rtsp ", "rtsp://mobil-live.sr.se/mobilradio/kanaler/p1-aac-96"},
     {"Sverige P3 rtsp", "rtsp://mobil-live.sr.se/mobilradio/kanaler/p3-aac-96"},
     {"P3 mp3 ICE LQ", "http://live-icy.gss.dr.dk:8000/Channel5_LQ.mp3"},
-    {"P3 httplive", "http://live-http.gss.dr.dk/streaming/audio/channel5.m3u8"},
+    {"P3 httplive", "httplive://live-http.gss.dr.dk/streaming/audio/channel5.m3u8"},
     {"P3 http(live)2", "http://live-http.gss.dr.dk/streaming/audio/channel5.m3u8"},
-    {"1 channel stream (AppleHTTP)", "http://live-http.gss.dr.dk/streaming/audio/Channel21/Channel21_LQ0.m3u8"}
   };
   private int[] afspilningskvalitet = new int[kanaler.length];
   String[] afspilningskvalitetNavn = { "-", "Godt", "Afbrydelser", "Virker ikke!" };
