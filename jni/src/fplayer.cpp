@@ -81,6 +81,7 @@ void debug_log(const char *msg, int code) {
 	int r = av_strerror(code, errstr, 200);
 
 	__android_log_print(ANDROID_LOG_DEBUG, TAG, "%s (%d): %s", msg, code, errstr);
+
 	if (errorCallbackMethodId != NULL) {
 		JNIEnv *env;
 		env = JNU_Get_Env();
@@ -112,7 +113,7 @@ void fplayer::play(char* filename, JNIEnv *env, jobject obj,
 	stream_object = obj;
 	stream_env = env;
 
-	__android_log_print(ANDROID_LOG_DEBUG, TAG, "START THREAD");
+	//__android_log_print(ANDROID_LOG_DEBUG, TAG, "START THREAD");
 	m_stoprequested = false;
 	do_play();
 }
@@ -122,7 +123,7 @@ int fplayer::start_engine() {
 		return ERROR_ALREADY_STARTED;
 	}
 	AVInputFormat *p = NULL;
-	__android_log_print(ANDROID_LOG_DEBUG, TAG, "Setup FFMPEG Engine");
+	//__android_log_print(ANDROID_LOG_DEBUG, TAG, "Setup FFMPEG Engine");
 
 	avcodec_init();
 	av_register_all();
@@ -154,13 +155,14 @@ int fplayer::do_play() {
 	 __android_log_print(ANDROID_LOG_DEBUG, TAG, "PLAY!!! File: %s", stream_url);
 	 pthread_mutex_unlock(&m_mutex);
 	 }*/
-	__android_log_print(ANDROID_LOG_DEBUG, TAG, "do_play()");
+	//__android_log_print(ANDROID_LOG_DEBUG, TAG, "do_play()");
 
 	int OUT_BUFFER_SIZE = AVCODEC_MAX_AUDIO_FRAME_SIZE * 8;
 	char* samples = (char *) av_malloc(OUT_BUFFER_SIZE);
 
 	if (stream_url == NULL) {
 		debug_log("Stream URL is not defined", NULL);
+		//__android_log_print(ANDROID_LOG_DEBUG, TAG, "do_play()");
 		//pthread_exit(&m_thread);
 		return ERROR_NO_STREAM_ADDRESS;
 	}
@@ -177,8 +179,7 @@ int fplayer::do_play() {
 	 return ERROR_CANNOT_FIND_FORMAT;
 	 }*/
 
-	__android_log_print(ANDROID_LOG_DEBUG, TAG, "avformat_open_input: %s",
-			stream_url);
+	__android_log_print(ANDROID_LOG_DEBUG, TAG, "avformat_open_input: %s", stream_url);
 
 	pFormatCtx = NULL;
 
@@ -193,8 +194,7 @@ int fplayer::do_play() {
 	//populates AVFormatContex structure
 	status = av_find_stream_info(pFormatCtx);
 	if (status < 0) {
-		__android_log_print(ANDROID_LOG_ERROR, TAG,
-				"Cannot read stream info. Status: %d", status);
+		debug_log("Cannot read stream info.", status);
 		return ERROR_CANNOT_READ_STREAM_INFO;
 	}
 
@@ -202,7 +202,7 @@ int fplayer::do_play() {
 
 	if (pFormatCtx->nb_streams != 1
 			&& pFormatCtx->streams[0]->codec->codec_type != AVMEDIA_TYPE_AUDIO) {
-		__android_log_print(ANDROID_LOG_ERROR, TAG, "Sanity check failed");
+		debug_log("Sanity check failed", status);
 		return ERROR_STREAM_SANITY_CHECK_FAILED;
 	}
 
@@ -218,8 +218,7 @@ int fplayer::do_play() {
 	for (int i = 0; i < pFormatCtx->nb_streams; i++) {
 		if (pFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO) {
 			audioStream = i;
-			__android_log_print(ANDROID_LOG_DEBUG, TAG,
-					"Stream ID: %d selected", pFormatCtx->streams[i]->id);
+			__android_log_print(ANDROID_LOG_DEBUG, TAG, "Stream ID: %d selected", pFormatCtx->streams[i]->id);
 			break;
 		}
 	}
@@ -227,13 +226,14 @@ int fplayer::do_play() {
 	codecCtx = pFormatCtx->streams[audioStream]->codec;
 
 	if (codecCtx == NULL) {
-		__android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot get codec");
+		//__android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot get codec");
+		debug_log("Cannot get codec", NULL);
 		return ERROR_CANNOT_OBTAIN_CODEC;
 	}
 
 	if (pFormatCtx->streams[audioStream]->codec->codec_id == NULL) {
-		__android_log_print(ANDROID_LOG_ERROR, TAG,
-				"Cannot get Codec ID from stream");
+		//__android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot get Codec ID from stream");
+		debug_log("Cannot get CodecID from stream", NULL);
 		return ERROR_NO_CODEC_INFO;
 	}
 
@@ -241,15 +241,15 @@ int fplayer::do_play() {
 			pFormatCtx->streams[audioStream]->codec->codec_id);
 
 	if (codec == NULL) {
-		__android_log_print(ANDROID_LOG_ERROR, TAG, "Unsupported codec: %s",
-				codec->name);
+		//__android_log_print(ANDROID_LOG_ERROR, TAG, "Unsupported codec: %s", codec->name);
+		debug_log("Unsupported codec", NULL);
 		return ERROR_CODEC_NOT_SUPPORTED;
 	}
 
 	status = avcodec_open(codecCtx, codec);
 	if (status < 0) {
-		__android_log_print(ANDROID_LOG_ERROR, TAG,
-				"Unsupported codec - avcodec_open: %s", codec->name);
+		//__android_log_print(ANDROID_LOG_ERROR, TAG, "Unsupported codec - avcodec_open: %s", codec->name);
+		debug_log("Unsupported codec", status);
 		return ERROR_CODEC_NOT_SUPPORTED;
 	}
 
@@ -261,7 +261,7 @@ int fplayer::do_play() {
 	int outputBufferPos = 0;
 	m_stoprequested = false;
 
-	__android_log_print(ANDROID_LOG_DEBUG, TAG, "before start read frame");
+	//__android_log_print(ANDROID_LOG_DEBUG, TAG, "before start read frame");
 	int ret_status;
 
 	while ((ret_status = av_read_frame(pFormatCtx, &avpkt)) == 0) {
