@@ -128,7 +128,7 @@ public class Afspiller_akt extends Activity implements OnClickListener {
     LinearLayout række = new LinearLayout(this);
     scrollCb = new CheckBox(this);
     scrollCb.setText("Scroll");
-    scrollCb.setSelected(Log.scroll_tv_til_bund);
+    scrollCb.setChecked(Log.scroll_tv_til_bund);
     scrollCb.setOnClickListener(new OnClickListener() {
       public void onClick(View arg0) {
         Log.scroll_tv_til_bund = scrollCb.isChecked();
@@ -245,13 +245,17 @@ public class Afspiller_akt extends Activity implements OnClickListener {
         androidMp.start();
          */
         if (holdTelefonVågen!=null) holdTelefonVågen.acquire();
-        //cm.startUsingNetworkFeature(ConnectivityManager.TYPE_WIFI, null);
+        //cm.startUsingNetworkFeature(ConnectivityManager.TYPE_MOBILE, null);
+        cm.startUsingNetworkFeature(ConnectivityManager.TYPE_WIFI, null);
         startStopKnap.setText("Stopx");
       } else {
         mp.stop();
         if (holdTelefonVågen!=null) holdTelefonVågen.release();
-        //cm.stopUsingNetworkFeature(ConnectivityManager.TYPE_WIFI, null);
+        //cm.stopUsingNetworkFeature(ConnectivityManager.TYPE_MOBILE, null);
+        cm.stopUsingNetworkFeature(ConnectivityManager.TYPE_WIFI, null);
         startStopKnap.setText("Play");
+        mp.runWhenstreamCallback = null;
+        mp.sink.runWhenPcmAudioSinkWrite = null;
         mp = null;
         if (androidMp != null) androidMp.release();
       }
