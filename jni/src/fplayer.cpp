@@ -27,11 +27,67 @@ extern "C" {
 #include "fplayer.h"
 
 
+jmethodID errorCallbackMethodId = NULL;
+jobject callbackObject = NULL;
+/*
+ * JNI Interface functions
+ */
+JavaVM *cachedVM;
+jstring filename;
+
+jint JNI_OnLoad(JavaVM* jvm, void* reserved) {
+
+	JNIEnv *env;
+	cachedVM = jvm;
+	__android_log_print(ANDROID_LOG_INFO, TAG, "JNI_OnLoad Called");
+
+	if (jvm->GetEnv((void **) &env, JNI_VERSION_1_6) != JNI_OK) {
+		__android_log_print(ANDROID_LOG_ERROR, TAG,
+				"Failed to get the environment using GetEnv()");
+		return -1;
+	}
+
+	return JNI_VERSION_1_6;
+}
+
+JNIEXPORT void JNICALL
+JNI_OnUnload(JavaVM *jvm, void *reserved) {
+	JNIEnv *env;
+	if (jvm->GetEnv((void**) &env, JNI_VERSION_1_6)) {
+		return;
+	}
+	//(*env)->DeleteWeakGlobalRef(env, );
+	return;
+}
+
+/**
+ * Get cached environment
+ */
+JNIEnv *JNU_Get_Env() {
+	JNIEnv *env;
+	cachedVM->GetEnv((void **) &env, JNI_VERSION_1_6);
+
+	return env;
+}
+
+JavaVM *getJavaVM() {
+	return cachedVM;
+}
+
+
 void debug_log(const char *msg, int code) {
+
 	char errstr[200];
-	int r=av_strerror(code, errstr, 200);
+	int r = av_strerror(code, errstr, 200);
 
 	__android_log_print(ANDROID_LOG_DEBUG, TAG, "%s (%d): %s", msg, code, errstr);
+	if (errorCallbackMethodId != NULL) {
+		JNIEnv *env;
+		env = JNU_Get_Env();
+		jstring jmesg = env->NewStringUTF(errstr);
+		env->CallVoidMethod(callbackObject, errorCallbackMethodId, jmesg, code);
+		env->DeleteLocalRef(jmesg);
+	}
 
 }
 
@@ -91,8 +147,6 @@ int fplayer::shutdown_engine() {
 	return 0;
 }
 
-
-
 int fplayer::do_play() {
 	/*
 	 while (!m_stoprequested) {
@@ -113,15 +167,15 @@ int fplayer::do_play() {
 
 	int status;
 	/*
-	const char format[] = "applehttp";
+	 const char format[] = "applehttp";
 
-	__android_log_print(ANDROID_LOG_DEBUG, TAG, "Start Stream");
-	__android_log_print(ANDROID_LOG_DEBUG, TAG, stream_url);
+	 __android_log_print(ANDROID_LOG_DEBUG, TAG, "Start Stream");
+	 __android_log_print(ANDROID_LOG_DEBUG, TAG, stream_url);
 
-	if (!(file_iformat = av_find_input_format(format))) {
-		__android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot find format: %s", format);
-		return ERROR_CANNOT_FIND_FORMAT;
-	}*/
+	 if (!(file_iformat = av_find_input_format(format))) {
+	 __android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot find format: %s", format);
+	 return ERROR_CANNOT_FIND_FORMAT;
+	 }*/
 
 	__android_log_print(ANDROID_LOG_DEBUG, TAG, "avformat_open_input: %s",
 			stream_url);
@@ -135,7 +189,6 @@ int fplayer::do_play() {
 		//__android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot open stream. Status: %d", status);
 		return ERROR_CANNOT_OPEN_STREAM;
 	}
-
 
 	//populates AVFormatContex structure
 	status = av_find_stream_info(pFormatCtx);
@@ -154,10 +207,10 @@ int fplayer::do_play() {
 	}
 
 	/*
-	for (int i = 0; i < pFormatCtx->nb_streams; ++i) {
-		__android_log_print(ANDROID_LOG_DEBUG, TAG, "Found stream ID: %d", pFormatCtx->streams[i]->id);
-		//av_dict_get(pFormatCtx->streams[i]->metadata, "", )
-	}*/
+	 for (int i = 0; i < pFormatCtx->nb_streams; ++i) {
+	 __android_log_print(ANDROID_LOG_DEBUG, TAG, "Found stream ID: %d", pFormatCtx->streams[i]->id);
+	 //av_dict_get(pFormatCtx->streams[i]->metadata, "", )
+	 }*/
 
 	// Find audio stream
 	//TODO selects only first stream
@@ -165,7 +218,8 @@ int fplayer::do_play() {
 	for (int i = 0; i < pFormatCtx->nb_streams; i++) {
 		if (pFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO) {
 			audioStream = i;
-			__android_log_print(ANDROID_LOG_DEBUG, TAG, "Stream ID: %d selected", pFormatCtx->streams[i]->id);
+			__android_log_print(ANDROID_LOG_DEBUG, TAG,
+					"Stream ID: %d selected", pFormatCtx->streams[i]->id);
 			break;
 		}
 	}
@@ -183,7 +237,8 @@ int fplayer::do_play() {
 		return ERROR_NO_CODEC_INFO;
 	}
 
-	codec = avcodec_find_decoder(pFormatCtx->streams[audioStream]->codec->codec_id);
+	codec = avcodec_find_decoder(
+			pFormatCtx->streams[audioStream]->codec->codec_id);
 
 	if (codec == NULL) {
 		__android_log_print(ANDROID_LOG_ERROR, TAG, "Unsupported codec: %s",
@@ -193,7 +248,8 @@ int fplayer::do_play() {
 
 	status = avcodec_open(codecCtx, codec);
 	if (status < 0) {
-		__android_log_print(ANDROID_LOG_ERROR, TAG, "Unsupported codec - avcodec_open: %s", codec->name);
+		__android_log_print(ANDROID_LOG_ERROR, TAG,
+				"Unsupported codec - avcodec_open: %s", codec->name);
 		return ERROR_CODEC_NOT_SUPPORTED;
 	}
 
@@ -210,12 +266,14 @@ int fplayer::do_play() {
 
 	while ((ret_status = av_read_frame(pFormatCtx, &avpkt)) == 0) {
 
-		if (codecCtx->codec_type == AVMEDIA_TYPE_AUDIO && avpkt.stream_index == audioStream) {
+		if (codecCtx->codec_type == AVMEDIA_TYPE_AUDIO
+				&& avpkt.stream_index == audioStream) {
 
 			int frame_size = OUT_BUFFER_SIZE;
 			int size = avpkt.size;
 			if (size == 0) {
-				__android_log_print(ANDROID_LOG_ERROR, TAG, "Packet size is 0: %d", size);
+				__android_log_print(ANDROID_LOG_ERROR, TAG,
+						"Packet size is 0: %d", size);
 				break;
 			}
 
@@ -225,32 +283,43 @@ int fplayer::do_play() {
 			}
 
 			while (size > 0) {
-				int len = avcodec_decode_audio3(codecCtx, (short *) samples, &frame_size, &avpkt);
+				int len = avcodec_decode_audio3(codecCtx, (short *) samples,
+						&frame_size, &avpkt);
 				if (len < 0) {
-					__android_log_print(ANDROID_LOG_ERROR, TAG, "Error while decoding. Status/len: %d. Size: %d", len, size);
+					__android_log_print(ANDROID_LOG_ERROR, TAG,
+							"Error while decoding. Status/len: %d. Size: %d",
+							len, size);
 					break;
 				}
 
 				if (outputBufferSize == -1) {
-					outputBufferSize = codecCtx->sample_rate * codecCtx->channels * 2 / flushPerSecond;
-					__android_log_print(ANDROID_LOG_DEBUG, TAG, "Setting outputBufferSize: %d", outputBufferSize);
+					outputBufferSize = codecCtx->sample_rate
+							* codecCtx->channels * 2 / flushPerSecond;
+					__android_log_print(ANDROID_LOG_DEBUG, TAG,
+							"Setting outputBufferSize: %d", outputBufferSize);
 					array = stream_env->NewByteArray(outputBufferSize);
-					outputBuffer = stream_env->GetByteArrayElements(array, NULL);
+					outputBuffer = stream_env->GetByteArrayElements(array,
+							NULL);
 				}
 
 				// Flush the buffer to Java if it's full
 				if (outputBufferPos + frame_size > outputBufferSize) {
-					__android_log_print( ANDROID_LOG_DEBUG,
-							TAG, "outputBufferPos=%d. frame_size_ptr=%d. outputBufferSize=%d", outputBufferPos, frame_size, outputBufferSize);
+					__android_log_print(
+							ANDROID_LOG_DEBUG,
+							TAG,
+							"outputBufferPos=%d. frame_size_ptr=%d. outputBufferSize=%d",
+							outputBufferPos, frame_size, outputBufferSize);
 
 					stream_env->ExceptionClear();
-					int ret = stream_env->CallIntMethod(stream_object, stream_callback, array, outputBufferPos);
+					int ret = stream_env->CallIntMethod(stream_object,
+							stream_callback, array, outputBufferPos);
 
 					if (ret == 1) { // STOP-signal
 						m_stoprequested = true;
 					}
 
-					__android_log_print(ANDROID_LOG_ERROR, TAG, "Flushed buffer to java");
+					__android_log_print(ANDROID_LOG_ERROR, TAG,
+							"Flushed buffer to java");
 					outputBufferPos = 0;
 
 					if (m_stoprequested) {
@@ -258,7 +327,8 @@ int fplayer::do_play() {
 					}
 				}
 
-				memcpy((outputBuffer + outputBufferPos), (int16_t *) samples, frame_size);
+				memcpy((outputBuffer + outputBufferPos), (int16_t *) samples,
+						frame_size);
 				outputBufferPos += frame_size;
 				size -= len;
 			}
@@ -267,14 +337,13 @@ int fplayer::do_play() {
 
 		}
 
-
-
 	}
 	char errstr[200];
-	int r=av_strerror(ret_status, errstr, 200);
+	int r = av_strerror(ret_status, errstr, 200);
 	//TODO Process return status from read frame
-	__android_log_print(ANDROID_LOG_DEBUG, TAG, "Returned status from frame read: %d %s (%d)",  ret_status, errstr, r);
-
+	__android_log_print(ANDROID_LOG_DEBUG, TAG,
+			"Returned status from frame read: %d %s (%d)", ret_status, errstr,
+			r);
 
 	if (outputBufferSize != -1) {
 		stream_env->ReleaseByteArrayElements(array, outputBuffer, NULL);
@@ -293,50 +362,6 @@ int fplayer::do_play() {
 fplayer player;
 
 
-/*
- * JNI Interface functions
- */
-JavaVM *cachedVM;
-jstring filename;
-
-jint JNI_OnLoad(JavaVM* jvm, void* reserved) {
-
-	JNIEnv *env;
-	cachedVM = jvm;
-	__android_log_print(ANDROID_LOG_INFO, TAG, "JNI_OnLoad Called");
-
-	if (jvm->GetEnv((void **) &env, JNI_VERSION_1_6) != JNI_OK) {
-		__android_log_print(ANDROID_LOG_ERROR, TAG,
-				"Failed to get the environment using GetEnv()");
-		return -1;
-	}
-
-	return JNI_VERSION_1_6;
-}
-
-JNIEXPORT void JNICALL
-JNI_OnUnload(JavaVM *jvm, void *reserved) {
-	JNIEnv *env;
-	if (jvm->GetEnv((void**) &env, JNI_VERSION_1_6)) {
-		return;
-	}
-	//(*env)->DeleteWeakGlobalRef(env, );
-	return;
-}
-
-/**
- * Get cached environment
- */
-JNIEnv *JNU_Get_Env() {
-	JNIEnv *env;
-	cachedVM->GetEnv((void **) &env, JNI_VERSION_1_6);
-
-	return env;
-}
-
-JavaVM *getJavaVM() {
-	return cachedVM;
-}
 
 /**
  * Set up audio engine
@@ -345,7 +370,15 @@ JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1createEngine(
 		JNIEnv *env, jobject obj, jobject mplayer) {
 
 	__android_log_print(ANDROID_LOG_DEBUG, TAG, "Create Engine");
+
 	//start_engine();
+
+	//"(Ljava/lang/String;I)V"
+
+	callbackObject = obj;
+	jclass cls = env->GetObjectClass(obj);
+	errorCallbackMethodId = env->GetMethodID(cls, "streamErrorCallback", "(Ljava/lang/String;I)V");
+
 	player.start_engine();
 }
 
