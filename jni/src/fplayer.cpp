@@ -13,7 +13,7 @@
 #define UINT64_C(c) (c ## ULL)
 #endif
 
-#define TAG "FPlayer.cpp"
+#define TAG "CCC"
 
 extern "C" {
 
