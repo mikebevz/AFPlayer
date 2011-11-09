@@ -111,6 +111,10 @@ private:
      * Current codec is not supported
      */
     static const int ERROR_CODEC_NOT_SUPPORTED = -1028;
+    /**
+     * Cannot find stream format
+     */
+    static const int ERROR_CANNOT_FIND_FORMAT = -1029;
 
     /**
      * Start a new thread
