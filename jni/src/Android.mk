@@ -3,7 +3,7 @@ LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
 LOCAL_MODULE := player
-LOCAL_SRC_FILES := player.c fplayer.cpp
+LOCAL_SRC_FILES := fplayer.cpp
 LOCAL_C_INCLUDES := $(LOCAL_PATH)/../includes \
 					$(LOCAL_PATH)/../ffmpeg
 					
