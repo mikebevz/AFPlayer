@@ -26,6 +26,7 @@ public:
 	fplayer();
 	~fplayer();
 	void play(char* filename, JNIEnv *env, jobject obj, jmethodID callback);
+	void play(char* filename, char* format, JNIEnv *env, jobject obj, jmethodID callback);
 	int stop();
 	int start_engine();
 	int shutdown_engine();
@@ -61,6 +62,11 @@ private:
 	 * Audio stream URI
 	 */
 	char *stream_url;
+
+	/**
+	 * Audio stream formar
+	 */
+	char *stream_format;
 
 	/**
 	 * TODO Consider if these are needed

@@ -60,10 +60,10 @@ public class Afspiller_akt extends Activity implements OnClickListener {
   private String[][] kanaler = {
     {"P3 rtsp LQ", "rtsp://live-rtsp.dr.dk/rtplive/_definst_/Channel5_LQ.stream"},
     {"Sverige P3 rtsp", "rtsp://mobil-live.sr.se/mobilradio/kanaler/p3-aac-96"},
-    {"P3 mp3 ICE LQ", "http://live-icy.gss.dr.dk:8000/Channel5_LQ.mp3"},
+    {"P3 mp3 ICE LQ", "http://live-icy.gss.dr.dk:8000/Channel5_LQ.mp3", "mp3"},
 //    {"P3 httplive", "httplive://live-http.gss.dr.dk/streaming/audio/channel5.m3u8"},
     {"P3 http(live)2", "http://live-http.gss.dr.dk/streaming/audio/channel5.m3u8"},
-    {"Mikes URL", "http://live-http.gss.dr.dk/streaming/audio/Channel21/Channel21_LQ0.m3u8"},
+    {"Mikes URL", "http://live-http.gss.dr.dk/streaming/audio/Channel21/Channel21_LQ0.m3u8", "applehttp"},
 
 
   };
@@ -205,13 +205,21 @@ public class Afspiller_akt extends Activity implements OnClickListener {
       if (mp==null) {
         int kanalNr = kanalSpinner.getSelectedItemPosition();
         String navn = kanaler[kanalNr][0];
+        String format = null;
+        if (kanaler[kanalNr].length > 2) {
+        	format = kanaler[kanalNr][2];
+        }
         url = kanaler[kanalNr][1];
         Log.d("Afspiller " + navn + " med URL:\n" + url);
         Toast.makeText(Afspiller_akt.this, "Spiller " + navn, Toast.LENGTH_LONG).show();
         //Toast.makeText(Afspiller_akt.this, "Lad den køre 2 minutter før du bedømmer den", Toast.LENGTH_LONG).show();
 
         visStatus(url);
-        mp = MediaPlayer.create(this, Uri.parse(url));
+        if (format != null) {
+        	mp = MediaPlayer.create(this, Uri.parse(url), format);
+        } else {
+        	mp = MediaPlayer.create(this, Uri.parse(url));
+        }
 
         mp.runWhenstreamCallback = new Runnable() {
           public void run() {

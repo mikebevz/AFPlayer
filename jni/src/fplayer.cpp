@@ -34,6 +34,7 @@ jobject callbackObject = NULL;
  */
 JavaVM *cachedVM;
 jstring filename;
+jstring stream_format;
 
 jint JNI_OnLoad(JavaVM* jvm, void* reserved) {
 
@@ -77,6 +78,7 @@ JavaVM *getJavaVM() {
 
 void debug_log(const char *msg, int code) {
 
+	//TODO when code=0 it's not an error
 	char errstr[200];
 	int r = av_strerror(code, errstr, 200);
 
@@ -98,6 +100,8 @@ fplayer::fplayer() :
 		m_stoprequested(false) {
 	//pthread_mutex_init(&m_mutex, NULL);
 	engine_started = false;
+	file_iformat = NULL;
+	stream_format = NULL;
 
 }
 
@@ -113,10 +117,23 @@ void fplayer::play(char* filename, JNIEnv *env, jobject obj,
 	stream_object = obj;
 	stream_env = env;
 
-	//__android_log_print(ANDROID_LOG_DEBUG, TAG, "START THREAD");
 	m_stoprequested = false;
 	do_play();
 }
+
+void fplayer::play(char* filename, char* format, JNIEnv *env, jobject obj,
+		jmethodID callback) {
+
+	stream_url = filename;
+	stream_callback = callback;
+	stream_object = obj;
+	stream_env = env;
+	stream_format = format;
+	m_stoprequested = false;
+	do_play();
+}
+
+
 
 int fplayer::start_engine() {
 	if (engine_started == true) {
@@ -168,22 +185,24 @@ int fplayer::do_play() {
 	}
 
 	int status;
-	/*
-	 const char format[] = "applehttp";
 
-	 __android_log_print(ANDROID_LOG_DEBUG, TAG, "Start Stream");
-	 __android_log_print(ANDROID_LOG_DEBUG, TAG, stream_url);
+	 //const char format[] = "applehttp";
+	if (stream_format != NULL) {
+		 __android_log_print(ANDROID_LOG_DEBUG, TAG, "Start Stream");
+		 __android_log_print(ANDROID_LOG_DEBUG, TAG, stream_url);
 
-	 if (!(file_iformat = av_find_input_format(format))) {
-	 __android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot find format: %s", format);
-	 return ERROR_CANNOT_FIND_FORMAT;
-	 }*/
+		 if (!(file_iformat = av_find_input_format(stream_format))) {
+		 __android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot find format: %s", stream_format);
+		 debug_log("Cannot find format", (int)file_iformat);
+		 return ERROR_CANNOT_FIND_FORMAT;
+		 }
+	}
 
 	__android_log_print(ANDROID_LOG_DEBUG, TAG, "avformat_open_input: %s", stream_url);
 
 	pFormatCtx = NULL;
 
-	status = avformat_open_input(&pFormatCtx, stream_url, NULL, options);
+	status = avformat_open_input(&pFormatCtx, stream_url, file_iformat, options);
 	if (status != 0) {
 
 		debug_log("Cannot open stream.", status);
@@ -274,6 +293,7 @@ int fplayer::do_play() {
 			if (size == 0) {
 				__android_log_print(ANDROID_LOG_ERROR, TAG,
 						"Packet size is 0: %d", size);
+				debug_log("Packet size is 0", NULL);
 				break;
 			}
 
@@ -288,38 +308,32 @@ int fplayer::do_play() {
 				if (len < 0) {
 					__android_log_print(ANDROID_LOG_ERROR, TAG,
 							"Error while decoding. Status/len: %d. Size: %d",
+
 							len, size);
+					debug_log("Error while decoding.", NULL);
 					break;
 				}
 
 				if (outputBufferSize == -1) {
 					outputBufferSize = codecCtx->sample_rate
 							* codecCtx->channels * 2 / flushPerSecond;
-					__android_log_print(ANDROID_LOG_DEBUG, TAG,
-							"Setting outputBufferSize: %d", outputBufferSize);
+					__android_log_print(ANDROID_LOG_DEBUG, TAG, "Setting outputBufferSize: %d", outputBufferSize);
 					array = stream_env->NewByteArray(outputBufferSize);
-					outputBuffer = stream_env->GetByteArrayElements(array,
-							NULL);
+					outputBuffer = stream_env->GetByteArrayElements(array, NULL);
 				}
 
 				// Flush the buffer to Java if it's full
 				if (outputBufferPos + frame_size > outputBufferSize) {
-					__android_log_print(
-							ANDROID_LOG_DEBUG,
-							TAG,
-							"outputBufferPos=%d. frame_size_ptr=%d. outputBufferSize=%d",
-							outputBufferPos, frame_size, outputBufferSize);
+					__android_log_print(ANDROID_LOG_DEBUG, TAG, "outputBufferPos=%d. frame_size_ptr=%d. outputBufferSize=%d", outputBufferPos, frame_size, outputBufferSize);
 
 					stream_env->ExceptionClear();
-					int ret = stream_env->CallIntMethod(stream_object,
-							stream_callback, array, outputBufferPos);
+					int ret = stream_env->CallIntMethod(stream_object, stream_callback, array, outputBufferPos);
 
 					if (ret == 1) { // STOP-signal
 						m_stoprequested = true;
 					}
 
-					__android_log_print(ANDROID_LOG_ERROR, TAG,
-							"Flushed buffer to java");
+					__android_log_print(ANDROID_LOG_ERROR, TAG, "Flushed buffer to java");
 					outputBufferPos = 0;
 
 					if (m_stoprequested) {
@@ -341,9 +355,8 @@ int fplayer::do_play() {
 	char errstr[200];
 	int r = av_strerror(ret_status, errstr, 200);
 	//TODO Process return status from read frame
-	__android_log_print(ANDROID_LOG_DEBUG, TAG,
-			"Returned status from frame read: %d %s (%d)", ret_status, errstr,
-			r);
+	__android_log_print(ANDROID_LOG_DEBUG, TAG, "Returned status from frame read: %d %s (%d)", ret_status, errstr, r);
+	debug_log("Stream playback stopped", ret_status);
 
 	if (outputBufferSize != -1) {
 		stream_env->ReleaseByteArrayElements(array, outputBuffer, NULL);
@@ -385,12 +398,21 @@ JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1createEngine(
 /**
  * Set data source
  */
-JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1setDataSource(
+JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1setDataSource__Ljava_lang_String_2(
 		JNIEnv *env, jobject obj, jstring path) {
 
 	filename = path;
 	__android_log_print(ANDROID_LOG_DEBUG, TAG, "Set DataSource: %s",
 			env->GetStringUTFChars(path, 0));
+
+}
+/**
+ * Set data soruce with format
+ */
+JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1setDataSource__Ljava_lang_String_2Ljava_lang_String_2
+  (JNIEnv *env, jobject obj, jstring path, jstring format) {
+	filename = path;
+	stream_format = format;
 
 }
 
@@ -402,9 +424,11 @@ JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1playStream(JNIEnv *env,
 	if (filename != 0) {
 		//start_audio_stream(env, obj, filename);
 
-		char *string;
+		char *stream_path;
+		char *format;
 
-		string = (char*) env->GetStringUTFChars(filename, NULL);
+		stream_path = (char*) env->GetStringUTFChars(filename, NULL);
+		format = (char*) env->GetStringUTFChars(stream_format, NULL);
 
 		jclass cls = env->GetObjectClass(obj);
 		if (!cls) {
@@ -416,8 +440,11 @@ JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1playStream(JNIEnv *env,
 			__android_log_print(ANDROID_LOG_ERROR, TAG,
 					"Cannot get callback method");
 		}
-
-		player.play(string, env, obj, method);
+		if (stream_format != NULL) {
+			player.play(stream_path, env, obj, method);
+		} else {
+			player.play(stream_path, format, env, obj, method);
+		}
 
 	} else {
 		jclass excCls = env->FindClass("java/lang/IllegalArgumentException");

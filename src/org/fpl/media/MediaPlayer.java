@@ -52,6 +52,28 @@ public class MediaPlayer {
 		return mp;
 
 	}
+	
+	/**
+	 * Create a new instance of MediaPlayer to play stream with format given.
+	 * When the engine doesn't have to autodetect stream format the playback starts faster
+	 * 
+	 * @param context
+	 *            Activity context
+	 * @param uri
+	 *            URI of the media resource, fx, a stream
+	 * 
+	 * @return MediaPlayer
+	 */
+	public static MediaPlayer create(Context context, Uri uri, String format) {
+		Log.d(TAG, "Create Stream");
+
+		MediaPlayer mp = new MediaPlayer();
+		mp.setDataSource(context, uri, format);
+		mp.prepare();// Not needed yet. Is here for compatibility
+
+		return mp;
+
+	}
 
 	/**
 	 * Set data source to be played back
@@ -76,6 +98,32 @@ public class MediaPlayer {
 		return;
 
 	}
+	
+	/**
+	 * Set data source to be played back
+	 * 
+	 * @param context
+	 *            Activity context
+	 * @param uri
+	 *            URI of the media resource
+	 * 
+	 * @throws IllegalStateException
+	 */
+	public void setDataSource(Context context, Uri uri, String format)
+			throws IllegalStateException {
+
+		String scheme = uri.getScheme();
+		if (scheme == null || scheme.equals("file")) {
+			// TODO Implement file playback
+			throw new IllegalArgumentException("File given " + uri);
+		}
+
+		n_setDataSource(uri.toString(), format); // Play path of stream
+		return;
+
+	}
+	
+	
 
 	/**
 	 * Start playing stream back
@@ -148,6 +196,16 @@ public class MediaPlayer {
 	 *            Stream URL
 	 */
 	public native void n_setDataSource(String path);
+	
+	/**
+	 * Set data source - stream url for now
+	 * 
+	 * @param path
+	 *            Stream URL
+	 * @param foramt 
+	 * 			  Stream format - skip format autodetection - faster start           
+	 */
+	public native void n_setDataSource(String path, String format);
 
 	/**
 	 * Start playing stream back

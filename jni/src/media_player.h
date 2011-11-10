@@ -20,8 +20,16 @@ JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1createEngine
  * Method:    n_setDataSource
  * Signature: (Ljava/lang/String;)V
  */
-JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1setDataSource
+JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1setDataSource__Ljava_lang_String_2
   (JNIEnv *env, jobject obj, jstring path);
+
+/*
+ * Class:     org_fpl_media_MediaPlayer
+ * Method:    n_setDataSource
+ * Signature: (Ljava/lang/String;Ljava/lang/String;)V
+ */
+JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1setDataSource__Ljava_lang_String_2Ljava_lang_String_2
+  (JNIEnv *env, jobject obj, jstring path, jstring format);
 
 /*
  * Class:     org_fpl_media_MediaPlayer
