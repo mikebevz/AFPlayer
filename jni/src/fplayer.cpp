@@ -149,7 +149,15 @@ int fplayer::start_engine() {
 
 	//Show all supported input formats in log
 	while (p = av_iformat_next(p)) {
-		__android_log_print(ANDROID_LOG_DEBUG, TAG, p->name);
+		//TODO return list of formats to mediaplayer
+		__android_log_print(ANDROID_LOG_DEBUG, TAG, "Input format: %s", p->name);
+	}
+
+	URLProtocol *prot = NULL;
+
+	while (prot = av_protocol_next(prot)) {
+		//TODO return list of protocols supported
+		__android_log_print(ANDROID_LOG_DEBUG, TAG, "Protocol: %s", prot->name);
 	}
 	//TODO Redirect log out to android log
 	av_log_set_level(AV_LOG_VERBOSE);

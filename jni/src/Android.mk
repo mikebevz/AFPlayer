@@ -13,9 +13,9 @@ LOCAL_LDLIBS += -L$(LOCAL_PATH)/../../libs/armeabi -llog  \
 LOCAL_STATIC_LIBRARIES := libavcodec libavdevice libavfilter libavformat libavutil libpostproc \
 						  libswscale 
 
-LOCAL_CFLAGS += -ggdb -fexceptions -Wall -Wextra -O0 -Wunreachable-code					  
+LOCAL_CFLAGS += -ggdb -fexceptions -Wall -Wextra -O0 -Wunreachable-code 			  
 LOCAL_CPPFLAGS += -ggdb -Wall -Wextra
 LOCAL_CXXFLAGS += -ggdb -Wall -Wextra -O0 -Wunreachable-code
-LOCAL_LDFLAGS += -Wl -ggdb
+LOCAL_LDFLAGS += -Wl -ggdb -lz 
 
 include $(BUILD_SHARED_LIBRARY)

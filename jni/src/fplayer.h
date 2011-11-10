@@ -64,7 +64,7 @@ private:
 	char *stream_url;
 
 	/**
-	 * Audio stream formar
+	 * Audio stream format
 	 */
 	char *stream_format;
 
@@ -126,7 +126,7 @@ private:
      * Start a new thread
      * @param obj
      */
-	static void* start_thread(void *obj);
+	//static void* start_thread(void *obj);
 
 	/**
 	 * Perform stream playback
