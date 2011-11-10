@@ -61,6 +61,8 @@ public class MediaPlayer {
 	 *            Activity context
 	 * @param uri
 	 *            URI of the media resource, fx, a stream
+	 * @param format 
+	 * 			  Format of the stream (tested with "mp3", "applehttp")	           
 	 * 
 	 * @return MediaPlayer
 	 */
