@@ -38,15 +38,18 @@ for version in $TARGET_ARCHS; do
 	FLAGS="$FLAGS --enable-zlib "	
     FLAGS="$FLAGS --enable-decoder=mp3 --enable-decoder=mp3adu --enable-decoder=mp3adufloat \
                   --enable-decoder=mp3float --enable-decoder=mp3on4 --enable-decoder=mp3on4floats \
-                  --enable-decoder=aac --enable-decoder=aac_latm --enable-decoder=ac3 --enable-decoder=alac"
+                  --enable-decoder=aac --enable-decoder=aac_latm --enable-decoder=ac3 --enable-decoder=alac\
+                  --enable-decoder=wmav1 --enable-decoder=wmav2 --enable-decoder=wmavoice"
 	FLAGS="$FLAGS --enable-protocol=http --enable-protocol=tcp --enable-network --enable-protocol=applehttp \
 	              --enable-protocol=rtp  --enable-protocol=udp --enable-protocol=md5 --enable-protocol=concat \
-	              --enable-protocol=file --enable-protocol=crypto --enable-protocol=pipe --enable-protocol=rtsp"
+	              --enable-protocol=file --enable-protocol=crypto --enable-protocol=pipe --enable-protocol=rtsp \
+	              --enable-protocol=mmst --enable-protocol=mmsh"
 	FLAGS="$FLAGS --enable-muxer=mp3 --enable-muxer=wav --enable-muxer=pcm_alaw --enable-muxer=pcm_mulaw \
 	              --enable-muxer=pcm_s16be --enable-muxer=pcm_s16le --enable-muxer=pcm_u16be --enable-muxer=pcm_u16le \
-	              --enable-muxer=rtsp \
+	              --enable-muxer=rtsp --enable-muxer=asf --enable-muxer=asf_stream\
 	              --enable-demuxer=mp3 --enable-demuxer=wav --enable-demuxer=aac --enable-demuxer=applehttp \
-	              --enable-demuxer=mpegts --enable-demuxer=aac --enable-demuxer=ogg --enable-demuxer=rtsp"
+	              --enable-demuxer=mpegts --enable-demuxer=aac --enable-demuxer=ogg --enable-demuxer=rtsp \
+	              --enable-demuxer=asf "
     FLAGS="$FLAGS --enable-parser=mpegaudio --enable-parser=aac --enable-parser=aac_latm "
     #FLAGS="$FLAGS --enable-bsf=mp3_header_decompress --enable-bsf=aac_adtstoasc --enable-bsf=noise "
     
