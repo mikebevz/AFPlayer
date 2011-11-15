@@ -61,7 +61,7 @@ public class PcmAudioSink {
       byte[] b = buffersNotInUse.get(n);
       if (b.length == length) {
         buffersNotInUse.remove(n);
-        Log.d("getFreeBuffer genbruger "+b);
+        //Log.d("getFreeBuffer genbruger "+b);
         return b;
       }
     }
@@ -105,7 +105,7 @@ public class PcmAudioSink {
     long tage = System.currentTimeMillis();
     result = track.write(buff, 0, buff.length);
     long slut = System.currentTimeMillis();
-    Log.d("AudioTrack.write in "+ (slut-tage)+ " ms (wait"+(start-tage)+" ms)" );
+    Log.d("AudioTrack.write in "+ (slut-tage)+ " ms (wait "+(tage-start)+" ms)" );
 
     buffersNotInUse.add(buff);
     bytesInBuffer -= buff.length;
