@@ -10,3 +10,4 @@ local.properties
 /nbandroid/
 /ant.properties
 jni/xxx.map
+libs/armeabi/libffmpeg.so
