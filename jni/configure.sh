@@ -17,6 +17,8 @@ export PATH="$TOOLCHAIN/bin:$PATH"
 
 export NDK_BUILD="yes"
 
+LOCAL_CFLAGS += -DHAVE_CONFIG_H -DCONFIG_NETWORK
+
 
 #rm -rf build/ffmpeg
 #mkdir -p build/ffmpeg
