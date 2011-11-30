@@ -199,6 +199,7 @@ public class Afspiller_akt extends Activity implements OnClickListener {
     startActivity(Intent.createChooser(postIntent, "Send mail..."));
   }
 
+  long tid_brugerTrykketStart, tid_førsteData, tid_spiller;
 
   public void onClick(View v) {
     try {
@@ -221,11 +222,16 @@ public class Afspiller_akt extends Activity implements OnClickListener {
         	mp = MediaPlayer.create(this, Uri.parse(url));
         }
 
+        tid_førsteData = tid_spiller = 0;
+        tid_brugerTrykketStart = System.currentTimeMillis();
+
         mp.runWhenstreamCallback = new Runnable() {
           public void run() {
             statusTv.setBackgroundColor(Color.RED);
             if (mp==null) return;
             bufferstr.setText("Buffer:\n"+mp.sink.bufferInSecs()+" sek");
+
+            if (tid_førsteData == 0) tid_førsteData = System.currentTimeMillis();
           }
         };
         mp.sink.runWhenPcmAudioSinkWrite = new Runnable() {
@@ -233,6 +239,13 @@ public class Afspiller_akt extends Activity implements OnClickListener {
             statusTv.setBackgroundColor(Color.BLACK);
             if (mp==null) return;
             bufferstr.setText("Buffer:\n"+mp.sink.bufferInSecs()+" sek");
+            if (tid_spiller == 0) {
+              tid_spiller = System.currentTimeMillis();
+              Toast.makeText(Afspiller_akt.this,
+                      "Tid start->data: "+(tid_førsteData - tid_brugerTrykketStart)/1000f+
+                      "\nTid start->lyd:  "+(tid_spiller - tid_brugerTrykketStart)/1000f
+                      , Toast.LENGTH_LONG).show();
+            }
           }
         };
         mp.sink.handler = new Handler();
