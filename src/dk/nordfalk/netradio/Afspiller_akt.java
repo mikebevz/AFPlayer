@@ -58,17 +58,14 @@ public class Afspiller_akt extends Activity implements OnClickListener {
   private CheckBox addBuzzTone;
   //private Spinner kanalSpinner;
   private String[][] kanaler = {
-    {"P3 rtsp LQ", "rtsp://live-rtsp.dr.dk/rtplive/_definst_/Channel5_LQ.stream", "aac"},
-    {"Sverige P3 rtsp", "rtsp://mobil-live.sr.se/mobilradio/kanaler/p3-aac-96"},
-    {"P3 mp3 ICE LQ", "http://live-icy.gss.dr.dk:8000/Channel5_LQ.mp3", "mp3"},
-//    {"P3 httplive", "httplive://live-http.gss.dr.dk/streaming/audio/channel5.m3u8"},
-    {"P3 http(live)2", "http://live-http.gss.dr.dk/streaming/audio/channel5.m3u8"},
+    {"SR P3 RTSP", "rtsp://mobil-live.sr.se/mobilradio/kanaler/p3-aac-96"},
     {"Mikes URL", "http://live-http.gss.dr.dk/streaming/audio/Channel21/Channel21_LQ0.m3u8", "applehttp"},
     {"Dubstep Radio 1 mp3 80", "http://178.32.253.144:8026"},
     {"Dubstep Radio 2 mp3 196", "http://lemon.citrus3.com:8062"},
-    {"DR ASF", "http://172.18.200.13:80/e02ch01m?wmcontentbitrate=40000&MSWMExt=.asf"}
-
-
+    {"DR ASF", "http://172.18.200.13:80/e02ch01m?wmcontentbitrate=40000&MSWMExt=.asf"},
+    {"DR P3 RTSP AAC", "rtsp://artsp.gss.dr.dk/A/A05L.stream", "aac"},
+    {"DR P3 Shoutcast MP3", "http://live-icy.gss.dr.dk:8000/Channel5_LQ.mp3", "mp3"},
+    {"DR P3 HLS AAC", "http://ahls.gss.dr.dk/A/A05L.stream/Playlist.m3u8"},
   };
   private int[] afspilningskvalitet = new int[kanaler.length];
   String[] afspilningskvalitetNavn = { "-", "Godt", "Afbrydelser", "Virker ikke!" };
