@@ -54,12 +54,11 @@ public class Afspiller_akt extends Activity implements OnClickListener {
   private Button startStopKnap;
   private TextView tv;
   private Button sendKnap;
-  Log log = new Log();
   private CheckBox addBuzzTone;
   //private Spinner kanalSpinner;
   private String[][] kanaler = {
     {"SR P3 RTSP", "rtsp://mobil-live.sr.se/mobilradio/kanaler/p3-aac-96"},
-    {"Mikes URL", "http://live-http.gss.dr.dk/streaming/audio/Channel21/Channel21_LQ0.m3u8", "applehttp"},
+//    {"Mikes URL", "http://live-http.gss.dr.dk/streaming/audio/Channel21/Channel21_LQ0.m3u8", "applehttp"},
     {"Dubstep Radio 1 mp3 80", "http://178.32.253.144:8026"},
     {"Dubstep Radio 2 mp3 196", "http://lemon.citrus3.com:8062"},
     {"DR ASF", "http://172.18.200.13:80/e02ch01m?wmcontentbitrate=40000&MSWMExt=.asf"},
@@ -108,7 +107,7 @@ public class Afspiller_akt extends Activity implements OnClickListener {
 
     tv = new TextView(this);
     tv.setId(100701);
-    log.systemOutToTextView(tv);
+    Log.systemOutToTextView(tv);
 
     TableLayout tl = new TableLayout(this);
 
