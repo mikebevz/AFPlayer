@@ -133,7 +133,10 @@ void fplayer::play(char* filename, char* format, JNIEnv *env, jobject obj,
 	do_play();
 }
 
-
+int fplayer::setSetupMethod(jmethodID method) {
+   this->stream_setup_callback = method;
+   return 0;
+}
 
 int fplayer::start_engine() {
 	if (engine_started == true) {
@@ -246,6 +249,7 @@ int fplayer::do_play() {
 		if (pFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO) {
 			audioStream = i;
 			__android_log_print(ANDROID_LOG_DEBUG, TAG, "Stream ID: %d selected", pFormatCtx->streams[i]->id);
+
 			break;
 		}
 	}
@@ -291,10 +295,19 @@ int fplayer::do_play() {
 	//__android_log_print(ANDROID_LOG_DEBUG, TAG, "before start read frame");
 	int ret_status;
 
+	__android_log_print(ANDROID_LOG_DEBUG, TAG, "Sample Rate: %d", codecCtx->sample_rate);
+
+	int ret = stream_env->CallIntMethod(stream_object, stream_setup_callback, codecCtx->sample_rate);
+	if (ret != 0) {
+	   __android_log_print(ANDROID_LOG_DEBUG, TAG, "Cannot call setup method");
+	}
+
 	while ((ret_status = av_read_frame(pFormatCtx, &avpkt)) == 0) {
 
 		if (codecCtx->codec_type == AVMEDIA_TYPE_AUDIO
 				&& avpkt.stream_index == audioStream) {
+
+
 
 			int frame_size = OUT_BUFFER_SIZE;
 			int size = avpkt.size;
@@ -323,8 +336,7 @@ int fplayer::do_play() {
 				}
 
 				if (outputBufferSize == -1) {
-					outputBufferSize = codecCtx->sample_rate
-							* codecCtx->channels * 2 / flushPerSecond;
+					outputBufferSize = codecCtx->sample_rate * codecCtx->channels * 2 / flushPerSecond;
 					__android_log_print(ANDROID_LOG_DEBUG, TAG, "Setting outputBufferSize: %d", outputBufferSize);
 					array = stream_env->NewByteArray(outputBufferSize);
 					outputBuffer = stream_env->GetByteArrayElements(array, NULL);
@@ -349,8 +361,7 @@ int fplayer::do_play() {
 					}
 				}
 
-				memcpy((outputBuffer + outputBufferPos), (int16_t *) samples,
-						frame_size);
+				memcpy((outputBuffer + outputBufferPos), (int16_t *) samples, frame_size);
 				outputBufferPos += frame_size;
 				size -= len;
 			}
@@ -441,6 +452,14 @@ JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1playStream(JNIEnv *env,
 		jclass cls = env->GetObjectClass(obj);
 		if (!cls) {
 			__android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot get class");
+		}
+
+		jmethodID setupMethod = env->GetMethodID(cls, "streamSetupCallback", "(I)I");
+		if (setupMethod != NULL) {
+		   player.setSetupMethod(setupMethod);
+		} else {
+		   __android_log_print(ANDROID_LOG_ERROR, TAG,
+		                  "Cannot get setup callback method");
 		}
 
 		jmethodID method = env->GetMethodID(cls, "streamCallback", "([BI)I");

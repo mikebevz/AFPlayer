@@ -30,7 +30,7 @@ public:
 	int stop();
 	int start_engine();
 	int shutdown_engine();
-
+	int setSetupMethod(jmethodID method);
 
 
 private:
@@ -68,10 +68,13 @@ private:
 	 */
 	char *stream_format;
 
+
+
 	/**
 	 * TODO Consider if these are needed
 	 */
 	_jmethodID *stream_callback;
+	_jmethodID *stream_setup_callback;
 	_jobject *stream_object;
     JNIEnv *stream_env;
 

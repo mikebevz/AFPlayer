@@ -44,7 +44,7 @@ for version in $TARGET_ARCHS; do
                   --enable-decoder=wmav1 --enable-decoder=wmav2 --enable-decoder=wmavoice"
 	FLAGS="$FLAGS --enable-protocol=http --enable-protocol=tcp --enable-network --enable-protocol=applehttp \
 	              --enable-protocol=rtp  --enable-protocol=udp --enable-protocol=md5 --enable-protocol=concat \
-	              --enable-protocol=file --enable-protocol=crypto --enable-protocol=pipe  \
+	              --enable-protocol=file --enable-protocol=crypto --enable-protocol=pipe --enable-protocol=rtsp \
 	              --enable-protocol=mmst --enable-protocol=mmsh"
 	FLAGS="$FLAGS --enable-muxer=mp3 --enable-muxer=wav --enable-muxer=pcm_alaw --enable-muxer=pcm_mulaw \
 	              --enable-muxer=pcm_s16be --enable-muxer=pcm_s16le --enable-muxer=pcm_u16be --enable-muxer=pcm_u16le \
