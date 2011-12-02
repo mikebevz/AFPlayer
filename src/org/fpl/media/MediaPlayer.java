@@ -284,6 +284,10 @@ public class MediaPlayer {
    }
 
    public void setRunWhenStreamCallback(Runnable runWhenstreamCallback) {
+      this.setRunWhenstreamCallback(runWhenstreamCallback);
+   }
+
+   public void setRunWhenstreamCallback(Runnable runWhenstreamCallback) {
       this.runWhenstreamCallback = runWhenstreamCallback;
    }
 

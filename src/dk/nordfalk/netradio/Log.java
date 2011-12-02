@@ -54,7 +54,7 @@ public class Log {
     log("v " + string);
   }
 
-  private Handler handler = new Handler();
+  static Handler handler = new Handler();
 
 	private static PrintStream originalSystemOut = null;
 
@@ -67,7 +67,8 @@ public class Log {
 	 * Call <code>systemOutToTextView(null)</code> to stop appending.
 	 * @param tv The view to print to. If null this cancels previous redirections.
 	 */
-	public void systemOutToTextView(final TextView tv) {
+	public static void systemOutToTextView(final TextView tv) {
+    textView = tv;
 
 		if (originalSystemOut == null) originalSystemOut = System.out;
 		if (tv == null) {
@@ -91,9 +92,9 @@ public class Log {
 	}
 
   public static boolean scroll_tv_til_bund = true;
-  private int linjer = 0;
+  private static int linjer = 0;
 
-	public void print(final TextView tv, final String text) {
+	public static void print(final TextView tv, final String text) {
 		handler.post(new Runnable() {
 			public void run() {
         if (linjer++>1000) { // Nulstil for ikke at overbelaste GUI-tråd
@@ -113,8 +114,10 @@ public class Log {
 	}
 
   public static void log(Object o) {
-    android.util.Log.d("JJJ", ""+o);
-    System.out.println(o);
+    String txt = ""+o;
+    android.util.Log.d("JJJ", txt);
+    //System.out.println(o);
+    if (textView != null) print(textView, txt+"\n");
   }
 
 

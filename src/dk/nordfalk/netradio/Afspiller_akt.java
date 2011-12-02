@@ -16,7 +16,6 @@ package dk.nordfalk.netradio;
 import java.util.ArrayList;
 
 import org.fpl.media.MediaPlayer;
-import org.fpl.media.PcmAudioSink;
 
 import android.app.Activity;
 import android.content.Context;
@@ -49,38 +48,34 @@ import android.widget.Toast;
  */
 public class Afspiller_akt extends Activity implements OnClickListener {
 
-   private Button                    startStopButton;
+   private Button                    startStopKnap;
    private TextView                  tv;
-   // private Button sendKnap;
+   private Button                    sendKnap;
    Log                               log                     = new Log();
    private CheckBox                  addBuzzTone;
    // private Spinner kanalSpinner;
-   private String[][]                channels                = {
-         // { "P3 rtsp LQ", "rtsp://live-rtsp.dr.dk/rtplive/_definst_/Channel5_LQ.stream", "aac" },
+   private String[][]                kanaler                 = {
+         { "P3 rtsp LQ", "rtsp://live-rtsp.dr.dk/rtplive/_definst_/Channel5_LQ.stream", "aac" },
          { "Sverige P3 rtsp", "rtsp://mobil-live.sr.se/mobilradio/kanaler/p3-aac-96" },
          { "P3 mp3 ICE LQ", "http://live-icy.gss.dr.dk:8000/Channel5_LQ.mp3", "mp3" },
          // {"P3 httplive", "httplive://live-http.gss.dr.dk/streaming/audio/channel5.m3u8"},
-         // { "P3 http(live)2", "http://live-http.gss.dr.dk/streaming/audio/channel5.m3u8" },
-         // { "Mikes URL", "http://live-http.gss.dr.dk/streaming/audio/Channel21/Channel21_LQ0.m3u8", "applehttp" },
-         // { "NetRadio.skala.fm High", "http://netradio.skala.fm/high" },
-
-         // { "Dubstep Radio 1 mp3 80", "http://178.32.253.144:8026" },
-         // { "Dubstep Radio 2 mp3 196", "http://lemon.citrus3.com:8062" },
-         // { "DR ASF", "http://172.18.200.13:80/e02ch01m?wmcontentbitrate=40000&MSWMExt=.asf" }
-         { "HLS rtsp", "rtsp://artsp.gss.dr.dk/A/A03L.stream" }, { "AppleHTTP Radio", "http://66.135.55.42:8081/wliubk" }
+         { "P3 http(live)2", "http://live-http.gss.dr.dk/streaming/audio/channel5.m3u8" },
+         { "Mikes URL", "http://live-http.gss.dr.dk/streaming/audio/Channel21/Channel21_LQ0.m3u8", "applehttp" },
+         { "Dubstep Radio 1 mp3 80", "http://178.32.253.144:8026" }, { "Dubstep Radio 2 mp3 196", "http://lemon.citrus3.com:8062" },
+         { "DR ASF", "http://172.18.200.13:80/e02ch01m?wmcontentbitrate=40000&MSWMExt=.asf" }
 
                                                              };
-   // private int[] afspilningskvalitet = new int[kanaler.length];
+   private int[]                     afspilningskvalitet     = new int[kanaler.length];
    String[]                          afspilningskvalitetNavn = { "-", "Godt", "Afbrydelser", "Virker ikke!" };
 
    private TextView                  statusTv;
    private TextView                  bufferstr;
    private Spinner                   kanalSpinner;
-   // private boolean spiller;
+   private boolean                   spiller;
    private String                    url;
    private MediaPlayer               mp;
    private CheckBox                  scrollCb;
-   private WakeLock                  keepPhoneWokenUp;
+   private WakeLock                  holdTelefonVågen;
    private ConnectivityManager       cm;
    private android.media.MediaPlayer androidMp;
 
@@ -103,7 +98,7 @@ public class Afspiller_akt extends Activity implements OnClickListener {
       }
 
       PowerManager pm = (PowerManager) getSystemService(Context.POWER_SERVICE);
-      keepPhoneWokenUp = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "afspiller");
+      holdTelefonVågen = pm.newWakeLock(PowerManager.PARTIAL_WAKE_LOCK, "afspiller");
       // holdTelefonVågen = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, "afspiller");
 
       cm = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -115,14 +110,13 @@ public class Afspiller_akt extends Activity implements OnClickListener {
       TableLayout tl = new TableLayout(this);
 
       ArrayList<String> elem = new ArrayList<String>();
-      for (String[] e : channels) {
+      for (String[] e : kanaler) {
          elem.add(e[0]);
       }
 
       kanalSpinner = new Spinner(this);
       kanalSpinner.setId(1008);
-      kanalSpinner.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, android.R.id.text1, elem
-            .toArray(new String[0])));
+      kanalSpinner.setAdapter(new ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, android.R.id.text1, elem.toArray(new String[0])));
       kanalSpinner.setSelection(elem.size() - 1);
       tl.addView(kanalSpinner);
       // række.addView(kanalSpinner);
@@ -168,11 +162,11 @@ public class Afspiller_akt extends Activity implements OnClickListener {
 
       tl.addView(række);
 
-      startStopButton = new Button(this);
-      startStopButton.setId(1010);
-      tl.addView(startStopButton);
-      startStopButton.setText("Spil");
-      startStopButton.setOnClickListener(this);
+      startStopKnap = new Button(this);
+      startStopKnap.setId(1010);
+      tl.addView(startStopKnap);
+      startStopKnap.setText("Spil");
+      startStopKnap.setOnClickListener(this);
 
       ScrollView sv = new ScrollView(this);
       sv.setId(10011);
@@ -180,7 +174,7 @@ public class Afspiller_akt extends Activity implements OnClickListener {
       tl.addView(sv);
       setContentView(tl);
 
-      // onClick(null);
+      onClick(null);
    }
 
    void åbnSendEpost(String emne, String txt) {
@@ -197,12 +191,12 @@ public class Afspiller_akt extends Activity implements OnClickListener {
       try {
          if (mp == null) {
             int kanalNr = kanalSpinner.getSelectedItemPosition();
-            String navn = channels[kanalNr][0];
+            String navn = kanaler[kanalNr][0];
             String format = null;
-            if (channels[kanalNr].length > 2) {
-               format = channels[kanalNr][2];
+            if (kanaler[kanalNr].length > 2) {
+               format = kanaler[kanalNr][2];
             }
-            url = channels[kanalNr][1];
+            url = kanaler[kanalNr][1];
             Log.d("Afspiller " + navn + " med URL:\n" + url);
             Toast.makeText(Afspiller_akt.this, "Spiller " + navn, Toast.LENGTH_LONG).show();
             // Toast.makeText(Afspiller_akt.this, "Lad den køre 2 minutter før du bedømmer den",
@@ -215,7 +209,7 @@ public class Afspiller_akt extends Activity implements OnClickListener {
                mp = MediaPlayer.create(this, Uri.parse(url));
             }
 
-            mp.setRunWhenStreamCallback(new Runnable() {
+            mp.setRunWhenstreamCallback(new Runnable() {
                public void run() {
                   statusTv.setBackgroundColor(Color.RED);
                   if (mp == null)
@@ -232,7 +226,7 @@ public class Afspiller_akt extends Activity implements OnClickListener {
                }
             });
             mp.sink.setHandler(new Handler());
-            PcmAudioSink.getTrack().setPlaybackPositionUpdateListener(new OnPlaybackPositionUpdateListener() {
+            mp.sink.getTrack().setPlaybackPositionUpdateListener(new OnPlaybackPositionUpdateListener() {
                public void onMarkerReached(AudioTrack arg0) {
                   Log.d("XXXXXXXX onMarkerReached " + arg0.getPlaybackHeadPosition());
                }
@@ -249,19 +243,19 @@ public class Afspiller_akt extends Activity implements OnClickListener {
              * android.media.MediaPlayer.create(this, Uri.parse(url)); androidMp.setVolume(0.1f, 0.1f);
              * androidMp.start();
              */
-            if (keepPhoneWokenUp != null)
-               keepPhoneWokenUp.acquire();
+            if (holdTelefonVågen != null)
+               holdTelefonVågen.acquire();
             // cm.startUsingNetworkFeature(ConnectivityManager.TYPE_MOBILE, null);
             cm.startUsingNetworkFeature(ConnectivityManager.TYPE_WIFI, null);
-            startStopButton.setText("Stopx");
+            startStopKnap.setText("Stopx");
          } else {
             mp.stop();
-            if (keepPhoneWokenUp != null)
-               keepPhoneWokenUp.release();
+            if (holdTelefonVågen != null)
+               holdTelefonVågen.release();
             // cm.stopUsingNetworkFeature(ConnectivityManager.TYPE_MOBILE, null);
             cm.stopUsingNetworkFeature(ConnectivityManager.TYPE_WIFI, null);
-            startStopButton.setText("Play");
-            mp.setRunWhenStreamCallback(null);
+            startStopKnap.setText("Play");
+            mp.setRunWhenstreamCallback(null);
             mp.sink.setRunWhenPcmAudioSinkWrite(null);
             mp = null;
             if (androidMp != null)
