@@ -13,7 +13,7 @@ import android.os.Handler;
 import dk.nordfalk.netradio.Log;
 
 /**
- * 
+ *
  * @author j
  */
 public class PcmAudioSink {
@@ -121,7 +121,7 @@ public class PcmAudioSink {
       long tage = System.currentTimeMillis();
       result = getTrack().write(buff, 0, buff.length);
       long slut = System.currentTimeMillis();
-      Log.d("AudioTrack.write in " + (slut - tage) + " ms (wait " + (tage - start) + " ms)");
+      //Log.d("AudioTrack.write in " + (slut - tage) + " ms (wait " + (tage - start) + " ms)");
 
       buffersNotInUse.add(buff);
       bytesInBuffer -= buff.length;

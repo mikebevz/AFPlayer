@@ -1,13 +1,13 @@
 /**
  * This file is part of Sveriges Radio Play for Android
- * 
+ *
  * Sveriges Radio Play for Android is free software: you can redistribute it and/or modify it under the terms of the GNU
  * General Public License version 2 as published by the Free Software Foundation.
- * 
+ *
  * Sveriges Radio Play for Android is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
  * for more details.
- * 
+ *
  * You should have received a copy of the GNU General Public License along with Sveriges Radio Play for Android. If not,
  * see <http://www.gnu.org/licenses/>.
  */
@@ -44,7 +44,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 /**
- * 
+ *
  * @author j
  */
 public class Afspiller_akt extends Activity implements OnClickListener {
@@ -58,15 +58,14 @@ public class Afspiller_akt extends Activity implements OnClickListener {
    private String[][]                kanaler                 = {
          // { "P3 rtsp LQ", "rtsp://live-rtsp.dr.dk/rtplive/_definst_/Channel5_LQ.stream", "aac" }, - Gives error -
          // Could not open codecs
-         { "Sverige P3 rtsp", "rtsp://mobil-live.sr.se/mobilradio/kanaler/p3-aac-96" },
-         { "P3 mp3 ICE LQ", "http://live-icy.gss.dr.dk:8000/Channel5_LQ.mp3", "mp3" },
-         { "P3 http live", "http://live-http.gss.dr.dk/streaming/audio/channel5.m3u8" }, 
          { "Dubstep Radio 1 mp3 80", "http://178.32.253.144:8026" },
-         { "Dubstep Radio 2 mp3 196", "http://lemon.citrus3.com:8062" }, 
-         { "RTSP HLS", "rtsp://artsp.gss.dr.dk/A/A03L.stream" },
-         { "DR P1", "http://ahls.gss.dr.dk/A/A03L.stream/Playlist.m3u8" }, 
-         { "DR P2", "http://ahls.gss.dr.dk/A/A04L.stream/Playlist.m3u8" }
-
+         { "Dubstep Radio 2 mp3 196", "http://lemon.citrus3.com:8062" },
+         { "DR P1 HLS", "http://ahls.gss.dr.dk/A/A03L.stream/Playlist.m3u8" },
+         { "DR P2 HLS", "http://ahls.gss.dr.dk/A/A04L.stream/Playlist.m3u8" },
+         { "DR P3 HLS", "http://ahls.gss.dr.dk/A/A05L.stream/Playlist.m3u8" },
+         { "DR P3 Icy/mp3", "http://live-icy.gss.dr.dk:8000/Channel5_LQ.mp3", "mp3" },
+         { "DR P3 RTSP", "rtsp://artsp.gss.dr.dk/A/A03L.stream" },
+         { "Sverige P3 rtsp", "rtsp://mobil-live.sr.se/mobilradio/kanaler/p3-aac-96" },
                                                              };
    // private int[] afspilningskvalitet = new int[kanaler.length];
    String[]                          afspilningskvalitetNavn = { "-", "Godt", "Afbrydelser", "Virker ikke!" };

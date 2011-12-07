@@ -25,12 +25,12 @@ public class MediaPlayer {
 
    /**
     * Create a new instance of MediaPlayer to play stream back
-    * 
+    *
     * @param context
     *           Activity context
     * @param uri
     *           URI of the media resource, fx, a stream
-    * 
+    *
     * @return MediaPlayer
     */
    public static MediaPlayer create(Context context, Uri uri) {
@@ -47,14 +47,14 @@ public class MediaPlayer {
    /**
     * Create a new instance of MediaPlayer to play stream with format given. When the engine doesn't have to autodetect
     * stream format the playback starts faster
-    * 
+    *
     * @param context
     *           Activity context
     * @param uri
     *           URI of the media resource, fx, a stream
     * @param format
     *           Format of the stream (tested with "mp3", "applehttp")
-    * 
+    *
     * @return MediaPlayer
     */
    public static MediaPlayer create(Context context, Uri uri, String format) {
@@ -81,7 +81,7 @@ public class MediaPlayer {
 
    /**
     * Set up what needs to be set up in JNI
-    * 
+    *
     * @param mplayer
     *           Reference to MediaPlayer
     */
@@ -89,13 +89,13 @@ public class MediaPlayer {
 
    /**
     * Start playing stream back
-    * 
+    *
     */
    public native void n_playStream();
 
    /**
     * Set data source - stream url for now
-    * 
+    *
     * @param path
     *           Stream URL
     */
@@ -103,7 +103,7 @@ public class MediaPlayer {
 
    /**
     * Set data source - stream url for now
-    * 
+    *
     * @param path
     *           Stream URL
     * @param foramt
@@ -127,7 +127,7 @@ public class MediaPlayer {
 
    /**
     * Shutdown engine and release all variables
-    * 
+    *
     * @throws IllegalStateException
     */
    public void release() throws IllegalStateException {
@@ -136,12 +136,12 @@ public class MediaPlayer {
 
    /**
     * Set data source to be played back
-    * 
+    *
     * @param context
     *           Activity context
     * @param uri
     *           URI of the media resource
-    * 
+    *
     * @throws IllegalStateException
     */
    public void setDataSource(Context context, Uri uri) throws IllegalStateException {
@@ -159,12 +159,12 @@ public class MediaPlayer {
 
    /**
     * Set data source to be played back
-    * 
+    *
     * @param context
     *           Activity context
     * @param uri
     *           URI of the media resource
-    * 
+    *
     * @throws IllegalStateException
     */
    public void setDataSource(Context context, Uri uri, String format) throws IllegalStateException {
@@ -185,7 +185,7 @@ public class MediaPlayer {
 
    /**
     * Start playing stream back
-    * 
+    *
     * @throws IllegalStateException
     */
    public void start() throws IllegalStateException {
@@ -207,7 +207,7 @@ public class MediaPlayer {
 
    /**
     * Stop playback
-    * 
+    *
     * @throws IllegalStateException
     */
    public void stop() throws IllegalStateException {
@@ -226,15 +226,15 @@ public class MediaPlayer {
 
    /**
     * Method called from JNI
-    * 
+    *
     * @param data
     *           Byte Array with decompressed data
     * @param length
     *           Length of the data in the array
-    * 
+    *
     */
    public int streamCallback(byte[] data, int length) {
-      Log.d(TAG, "Buffer er " + sink.bytesInBuffer + ", dvs " + sink.bufferInSecs() + " sek");
+      Log.d(TAG, "data:"+length+ " buffer " + sink.bytesInBuffer + " b (" + sink.bufferInSecs() + " sek)");
       try {
          if (stopRequested) {
             isPlaying = false;
