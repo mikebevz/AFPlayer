@@ -223,7 +223,7 @@ int fplayer::do_play() {
 
 	//populates AVFormatContex structure
 	status = av_find_stream_info(pFormatCtx);
-	if (status < 0) {
+	if (status != NULL && status < 0) {
 		debug_log("Cannot read stream info.", status);
 		return ERROR_CANNOT_READ_STREAM_INFO;
 	}

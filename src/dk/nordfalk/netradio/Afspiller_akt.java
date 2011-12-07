@@ -16,6 +16,7 @@ package dk.nordfalk.netradio;
 import java.util.ArrayList;
 
 import org.fpl.media.MediaPlayer;
+import org.fpl.media.PcmAudioSink;
 
 import android.app.Activity;
 import android.content.Context;
@@ -50,28 +51,26 @@ public class Afspiller_akt extends Activity implements OnClickListener {
 
    private Button                    startStopKnap;
    private TextView                  tv;
-   private Button                    sendKnap;
+   // private Button sendKnap;
    Log                               log                     = new Log();
    private CheckBox                  addBuzzTone;
    // private Spinner kanalSpinner;
    private String[][]                kanaler                 = {
-         { "P3 rtsp LQ", "rtsp://live-rtsp.dr.dk/rtplive/_definst_/Channel5_LQ.stream", "aac" },
+         // { "P3 rtsp LQ", "rtsp://live-rtsp.dr.dk/rtplive/_definst_/Channel5_LQ.stream", "aac" }, - Gives error -
+         // Could not open codecs
          { "Sverige P3 rtsp", "rtsp://mobil-live.sr.se/mobilradio/kanaler/p3-aac-96" },
          { "P3 mp3 ICE LQ", "http://live-icy.gss.dr.dk:8000/Channel5_LQ.mp3", "mp3" },
-         // {"P3 httplive", "httplive://live-http.gss.dr.dk/streaming/audio/channel5.m3u8"},
-         { "P3 http(live)2", "http://live-http.gss.dr.dk/streaming/audio/channel5.m3u8" },
-         { "Mikes URL", "http://live-http.gss.dr.dk/streaming/audio/Channel21/Channel21_LQ0.m3u8", "applehttp" },
-         { "Dubstep Radio 1 mp3 80", "http://178.32.253.144:8026" }, { "Dubstep Radio 2 mp3 196", "http://lemon.citrus3.com:8062" },
-         { "DR ASF", "http://172.18.200.13:80/e02ch01m?wmcontentbitrate=40000&MSWMExt=.asf" }
+         { "P3 http live", "http://live-http.gss.dr.dk/streaming/audio/channel5.m3u8" }, { "Dubstep Radio 1 mp3 80", "http://178.32.253.144:8026" },
+         { "Dubstep Radio 2 mp3 196", "http://lemon.citrus3.com:8062" }, { "RTSP HLS", "rtsp://artsp.gss.dr.dk/A/A03L.stream" }
 
                                                              };
-   private int[]                     afspilningskvalitet     = new int[kanaler.length];
+   // private int[] afspilningskvalitet = new int[kanaler.length];
    String[]                          afspilningskvalitetNavn = { "-", "Godt", "Afbrydelser", "Virker ikke!" };
 
    private TextView                  statusTv;
    private TextView                  bufferstr;
    private Spinner                   kanalSpinner;
-   private boolean                   spiller;
+   // private boolean spiller;
    private String                    url;
    private MediaPlayer               mp;
    private CheckBox                  scrollCb;
@@ -105,7 +104,7 @@ public class Afspiller_akt extends Activity implements OnClickListener {
 
       tv = new TextView(this);
       tv.setId(100701);
-      log.systemOutToTextView(tv);
+      Log.systemOutToTextView(tv);
 
       TableLayout tl = new TableLayout(this);
 
@@ -116,7 +115,8 @@ public class Afspiller_akt extends Activity implements OnClickListener {
 
       kanalSpinner = new Spinner(this);
       kanalSpinner.setId(1008);
-      kanalSpinner.setAdapter(new ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, android.R.id.text1, elem.toArray(new String[0])));
+      kanalSpinner.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item, android.R.id.text1, elem
+            .toArray(new String[0])));
       kanalSpinner.setSelection(elem.size() - 1);
       tl.addView(kanalSpinner);
       // række.addView(kanalSpinner);
@@ -226,7 +226,7 @@ public class Afspiller_akt extends Activity implements OnClickListener {
                }
             });
             mp.sink.setHandler(new Handler());
-            mp.sink.getTrack().setPlaybackPositionUpdateListener(new OnPlaybackPositionUpdateListener() {
+            PcmAudioSink.getTrack().setPlaybackPositionUpdateListener(new OnPlaybackPositionUpdateListener() {
                public void onMarkerReached(AudioTrack arg0) {
                   Log.d("XXXXXXXX onMarkerReached " + arg0.getPlaybackHeadPosition());
                }
