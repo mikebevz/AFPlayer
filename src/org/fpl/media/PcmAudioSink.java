@@ -24,7 +24,7 @@ public class PcmAudioSink {
 
    private static AudioTrack          track;
    int                                bytesPerSecond;
-   final int                          preferredBufferInSeconds = 2;
+   final int                          preferredBufferInSeconds = 9;
    public LinkedBlockingQueue<byte[]> buffersInUse             = new LinkedBlockingQueue<byte[]>();
    public int                         bytesInBuffer            = 0;
    public ArrayList<byte[]>           buffersNotInUse          = new ArrayList<byte[]>();

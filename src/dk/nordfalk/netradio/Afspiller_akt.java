@@ -19,6 +19,7 @@ import org.fpl.media.MediaPlayer;
 import org.fpl.media.PcmAudioSink;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
@@ -190,6 +191,8 @@ public class Afspiller_akt extends Activity implements OnClickListener {
       startActivity(Intent.createChooser(postIntent, "Send mail..."));
    }
 
+  long tid_brugerTrykketStart, tid_førsteData, tid_spiller;
+
    public void onClick(View v) {
       try {
          if (mp == null) {
@@ -201,7 +204,7 @@ public class Afspiller_akt extends Activity implements OnClickListener {
             }
             url = kanaler[kanalNr][1];
             Log.d("Afspiller " + navn + " med URL:\n" + url);
-            Toast.makeText(Afspiller_akt.this, "Spiller " + navn, Toast.LENGTH_LONG).show();
+            // Toast.makeText(Afspiller_akt.this, "Spiller " + navn, Toast.LENGTH_LONG).show();
             // Toast.makeText(Afspiller_akt.this, "Lad den køre 2 minutter før du bedømmer den",
             // Toast.LENGTH_LONG).show();
 
@@ -212,12 +215,16 @@ public class Afspiller_akt extends Activity implements OnClickListener {
                mp = MediaPlayer.create(Uri.parse(url));
             }
 
+            tid_førsteData = tid_spiller = 0;
+            tid_brugerTrykketStart = System.currentTimeMillis();
+
             mp.setRunWhenstreamCallback(new Runnable() {
                public void run() {
                   statusTv.setBackgroundColor(Color.RED);
                   if (mp == null)
                      return;
                   bufferstr.setText("Buffer:\n" + mp.sink.bufferInSecs() + " sek");
+                  if (tid_førsteData == 0) tid_førsteData = System.currentTimeMillis();
                }
             });
             mp.sink.setRunWhenPcmAudioSinkWrite(new Runnable() {
@@ -226,7 +233,19 @@ public class Afspiller_akt extends Activity implements OnClickListener {
                   if (mp == null)
                      return;
                   bufferstr.setText("Buffer:\n" + mp.sink.bufferInSecs() + " sek");
-               }
+                  if (tid_spiller == 0) {
+                    tid_spiller = System.currentTimeMillis();
+                    String txt = "Tid start->data: "+(tid_førsteData - tid_brugerTrykketStart)/1000f+
+                            "\nTid start->lyd:  "+(tid_spiller - tid_brugerTrykketStart)/1000f;
+
+                    AlertDialog.Builder dialog=new AlertDialog.Builder(Afspiller_akt.this);
+                    //dialog.setTitle("En AlertDialog");
+                    dialog.setMessage(txt);
+                    dialog.show();
+
+                    //Toast.makeText(Afspiller_akt.this, txt, Toast.LENGTH_LONG).show();
+                     }
+                   }
             });
             mp.sink.setHandler(new Handler());
             PcmAudioSink.getTrack().setPlaybackPositionUpdateListener(new OnPlaybackPositionUpdateListener() {
