@@ -38,7 +38,7 @@ public class FPlayerActivity extends Activity implements OnClickListener {
 		stopBtn = (Button) findViewById(R.id.stopBtn);
 		stopBtn.setOnClickListener(this);
 
-		mp = MediaPlayer.create(this, Uri.parse(applehttp));
+		mp = MediaPlayer.create(Uri.parse(applehttp));
 
 	}
 

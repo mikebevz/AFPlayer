@@ -2,7 +2,6 @@ package org.fpl.media;
 
 import java.lang.ref.WeakReference;
 
-import android.content.Context;
 import android.net.Uri;
 import dk.nordfalk.netradio.Log;
 
@@ -26,18 +25,16 @@ public class MediaPlayer {
    /**
     * Create a new instance of MediaPlayer to play stream back
     *
-    * @param context
-    *           Activity context
     * @param uri
     *           URI of the media resource, fx, a stream
     *
     * @return MediaPlayer
     */
-   public static MediaPlayer create(Context context, Uri uri) {
+   public static MediaPlayer create(Uri uri) {
       Log.d(TAG, "Create Stream");
 
       MediaPlayer mp = new MediaPlayer();
-      mp.setDataSource(context, uri);
+      mp.setDataSource(uri);
       mp.prepare();// Not needed yet. Is here for compatibility
 
       return mp;
@@ -48,8 +45,6 @@ public class MediaPlayer {
     * Create a new instance of MediaPlayer to play stream with format given. When the engine doesn't have to autodetect
     * stream format the playback starts faster
     *
-    * @param context
-    *           Activity context
     * @param uri
     *           URI of the media resource, fx, a stream
     * @param format
@@ -57,11 +52,11 @@ public class MediaPlayer {
     *
     * @return MediaPlayer
     */
-   public static MediaPlayer create(Context context, Uri uri, String format) {
+   public static MediaPlayer create(Uri uri, String format) {
       Log.d(TAG, "Create Stream");
 
       MediaPlayer mp = new MediaPlayer();
-      mp.setDataSource(context, uri, format);
+      mp.setDataSource(uri, format);
       mp.prepare();// Not needed yet. Is here for compatibility
 
       return mp;
@@ -137,14 +132,12 @@ public class MediaPlayer {
    /**
     * Set data source to be played back
     *
-    * @param context
-    *           Activity context
     * @param uri
     *           URI of the media resource
     *
     * @throws IllegalStateException
     */
-   public void setDataSource(Context context, Uri uri) throws IllegalStateException {
+   public void setDataSource(Uri uri) throws IllegalStateException {
 
       String scheme = uri.getScheme();
       if (scheme == null || scheme.equals("file")) {
@@ -167,7 +160,7 @@ public class MediaPlayer {
     *
     * @throws IllegalStateException
     */
-   public void setDataSource(Context context, Uri uri, String format) throws IllegalStateException {
+   public void setDataSource(Uri uri, String format) throws IllegalStateException {
 
       String scheme = uri.getScheme();
       if (scheme == null || scheme.equals("file")) {

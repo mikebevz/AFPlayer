@@ -446,8 +446,11 @@ JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1playStream(JNIEnv *env,
 		char *stream_path;
 		char *format;
 
+__android_log_print(ANDROID_LOG_ERROR, TAG, "XXX1");
 		stream_path = (char*) env->GetStringUTFChars(filename, NULL);
+__android_log_print(ANDROID_LOG_ERROR, TAG, "XXX2");
 		format = (char*) env->GetStringUTFChars(stream_format, NULL);
+__android_log_print(ANDROID_LOG_ERROR, TAG, "XXX3");
 
 		jclass cls = env->GetObjectClass(obj);
 		if (!cls) {

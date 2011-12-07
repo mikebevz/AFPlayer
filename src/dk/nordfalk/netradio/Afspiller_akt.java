@@ -207,9 +207,9 @@ public class Afspiller_akt extends Activity implements OnClickListener {
 
             visStatus(url);
             if (format != null) {
-               mp = MediaPlayer.create(this, Uri.parse(url), format);
+               mp = MediaPlayer.create(Uri.parse(url), format);
             } else {
-               mp = MediaPlayer.create(this, Uri.parse(url));
+               mp = MediaPlayer.create(Uri.parse(url));
             }
 
             mp.setRunWhenstreamCallback(new Runnable() {
