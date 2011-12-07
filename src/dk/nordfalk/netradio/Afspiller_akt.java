@@ -60,8 +60,12 @@ public class Afspiller_akt extends Activity implements OnClickListener {
          // Could not open codecs
          { "Sverige P3 rtsp", "rtsp://mobil-live.sr.se/mobilradio/kanaler/p3-aac-96" },
          { "P3 mp3 ICE LQ", "http://live-icy.gss.dr.dk:8000/Channel5_LQ.mp3", "mp3" },
-         { "P3 http live", "http://live-http.gss.dr.dk/streaming/audio/channel5.m3u8" }, { "Dubstep Radio 1 mp3 80", "http://178.32.253.144:8026" },
-         { "Dubstep Radio 2 mp3 196", "http://lemon.citrus3.com:8062" }, { "RTSP HLS", "rtsp://artsp.gss.dr.dk/A/A03L.stream" }
+         { "P3 http live", "http://live-http.gss.dr.dk/streaming/audio/channel5.m3u8" }, 
+         { "Dubstep Radio 1 mp3 80", "http://178.32.253.144:8026" },
+         { "Dubstep Radio 2 mp3 196", "http://lemon.citrus3.com:8062" }, 
+         { "RTSP HLS", "rtsp://artsp.gss.dr.dk/A/A03L.stream" },
+         { "DR P1", "http://ahls.gss.dr.dk/A/A03L.stream/Playlist.m3u8" }, 
+         { "DR P2", "http://ahls.gss.dr.dk/A/A04L.stream/Playlist.m3u8" }
 
                                                              };
    // private int[] afspilningskvalitet = new int[kanaler.length];
