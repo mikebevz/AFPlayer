@@ -33,8 +33,8 @@ jobject callbackObject = NULL;
  * JNI Interface functions
  */
 JavaVM *cachedVM;
-jstring filename;
-jstring stream_format;
+static const char * filename = NULL;
+static const char * stream_format = NULL;
 
 jint JNI_OnLoad(JavaVM* jvm, void* reserved) {
 
@@ -84,13 +84,14 @@ void debug_log(const char *msg, int code) {
 
 	__android_log_print(ANDROID_LOG_DEBUG, TAG, "%s (%d): %s", msg, code, errstr);
 
+	/*
 	if (errorCallbackMethodId != NULL) {
 		JNIEnv *env;
 		env = JNU_Get_Env();
 		jstring jmesg = env->NewStringUTF(errstr);
 		env->CallVoidMethod(callbackObject, errorCallbackMethodId, jmesg, code);
 		env->DeleteLocalRef(jmesg);
-	}
+	}*/
 
 }
 
@@ -109,7 +110,7 @@ fplayer::~fplayer() {
 	//pthread_mutex_destroy(&m_mutex);
 }
 
-void fplayer::play(char* filename, JNIEnv *env, jobject obj,
+void fplayer::play(const char* filename, JNIEnv *env, jobject obj,
 		jmethodID callback) {
 
 	stream_url = filename;
@@ -121,7 +122,7 @@ void fplayer::play(char* filename, JNIEnv *env, jobject obj,
 	do_play();
 }
 
-void fplayer::play(char* filename, char* format, JNIEnv *env, jobject obj,
+void fplayer::play(const char* filename, const char* format, JNIEnv *env, jobject obj,
 		jmethodID callback) {
 
 	stream_url = filename;
@@ -419,19 +420,24 @@ JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1createEngine(
  */
 JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1setDataSource__Ljava_lang_String_2(
 		JNIEnv *env, jobject obj, jstring path) {
-
-	filename = path;
-	__android_log_print(ANDROID_LOG_DEBUG, TAG, "Set DataSource: %s",
-			env->GetStringUTFChars(path, 0));
+   jboolean isCopy = JNI_TRUE;
+	filename = env->GetStringUTFChars(path, &isCopy);
+	__android_log_print(ANDROID_LOG_DEBUG, TAG, "Filename: %s. StreamFormat: %s", filename, stream_format);
 
 }
+
+
 /**
  * Set data soruce with format
  */
 JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1setDataSource__Ljava_lang_String_2Ljava_lang_String_2
   (JNIEnv *env, jobject obj, jstring path, jstring format) {
-	filename = path;
-	stream_format = format;
+
+   jboolean isCopy = JNI_TRUE;
+   filename = JNU_Get_Env()->GetStringUTFChars(path, &isCopy);
+	//filename = path;
+	stream_format = JNU_Get_Env()->GetStringUTFChars(format, &isCopy);
+	__android_log_print(ANDROID_LOG_DEBUG, TAG, "Filename: %s. StreamFormat: %s", filename, stream_format);
 
 }
 
@@ -443,13 +449,13 @@ JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1playStream(JNIEnv *env,
 	if (filename != 0) {
 		//start_audio_stream(env, obj, filename);
 
-		char *stream_path;
-		char *format;
+		const char *stream_path;
+		const char *format;
 
 __android_log_print(ANDROID_LOG_ERROR, TAG, "XXX1");
-		stream_path = (char*) env->GetStringUTFChars(filename, NULL);
+		stream_path = filename;//(char*) env->GetStringUTFChars(filename, NULL);
 __android_log_print(ANDROID_LOG_ERROR, TAG, "XXX2");
-		format = (char*) env->GetStringUTFChars(stream_format, NULL);
+		format = stream_format;//(char*) env->GetStringUTFChars(stream_format, NULL);
 __android_log_print(ANDROID_LOG_ERROR, TAG, "XXX3");
 
 		jclass cls = env->GetObjectClass(obj);

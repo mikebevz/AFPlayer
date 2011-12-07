@@ -25,8 +25,8 @@ class fplayer {
 public:
 	fplayer();
 	~fplayer();
-	void play(char* filename, JNIEnv *env, jobject obj, jmethodID callback);
-	void play(char* filename, char* format, JNIEnv *env, jobject obj, jmethodID callback);
+	void play(const char* filename, JNIEnv *env, jobject obj, jmethodID callback);
+	void play(const char* filename, const char* format, JNIEnv *env, jobject obj, jmethodID callback);
 	int stop();
 	int start_engine();
 	int shutdown_engine();
@@ -61,12 +61,12 @@ private:
 	/**
 	 * Audio stream URI
 	 */
-	char *stream_url;
+	const char *stream_url;
 
 	/**
 	 * Audio stream format
 	 */
-	char *stream_format;
+	const char *stream_format;
 
 
 
