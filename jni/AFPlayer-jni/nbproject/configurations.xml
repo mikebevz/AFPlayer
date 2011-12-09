@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configurationDescriptor version="79">
+  <logicalFolder name="root" displayName="root" projectFiles="true" kind="ROOT">
+    <df name="src" root="/home/j/android/dr-netradio/ffmpeg-mike/AFPlayer/jni/src">
+      <in>fplayer.cpp</in>
+      <in>fplayer.h</in>
+      <in>media_player.h</in>
+    </df>
+    <logicalFolder name="ExternalFiles"
+                   displayName="Important Files"
+                   projectFiles="false"
+                   kind="IMPORTANT_FILES_FOLDER">
+      <itemPath>../src/Android.mk</itemPath>
+    </logicalFolder>
+  </logicalFolder>
+  <sourceFolderFilter>^(nbproject)$</sourceFolderFilter>
+  <sourceRootList>
+    <Elem>/home/j/android/dr-netradio/ffmpeg-mike/AFPlayer/jni/src</Elem>
+  </sourceRootList>
+  <projectmakefile>../src/Android.mk</projectmakefile>
+  <confs>
+    <conf name="Default" type="0">
+      <toolsSet>
+        <remote-sources-mode>LOCAL_SOURCES</remote-sources-mode>
+        <compilerSet>default</compilerSet>
+      </toolsSet>
+      <makefileType>
+        <makeTool>
+          <buildCommandWorkingDir>../src</buildCommandWorkingDir>
+          <buildCommand>${MAKE} -f Android.mk</buildCommand>
+          <cleanCommand>${MAKE} -f Android.mk clean</cleanCommand>
+          <executablePath></executablePath>
+          <ccTool>
+            <incDir>
+              <pElem>../src</pElem>
+              <pElem>../includes</pElem>
+              <pElem>/home/j/android/android-ndk-r6b/platforms/android-3/arch-arm/usr/include</pElem>
+            </incDir>
+          </ccTool>
+        </makeTool>
+      </makefileType>
+    </conf>
+  </confs>
+</configurationDescriptor>

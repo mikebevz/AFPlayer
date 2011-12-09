@@ -11,6 +11,7 @@ import android.media.AudioManager;
 import android.media.AudioTrack;
 import android.os.Handler;
 import dk.nordfalk.netradio.Log;
+import java.lang.ref.SoftReference;
 
 /**
  *
@@ -27,7 +28,7 @@ public class PcmAudioSink {
    final int                          preferredBufferInSeconds = 9;
    public LinkedBlockingQueue<byte[]> buffersInUse             = new LinkedBlockingQueue<byte[]>();
    public int                         bytesInBuffer            = 0;
-   public ArrayList<byte[]>           buffersNotInUse          = new ArrayList<byte[]>();
+   public ArrayList<SoftReference<byte[]>> buffersNotInUse     = new ArrayList<SoftReference<byte[]>>();
    int                                result;
 
    public PcmAudioSink() {
@@ -72,8 +73,9 @@ public class PcmAudioSink {
    byte[] getFreeBuffer(int length) {
       int n = buffersNotInUse.size();
       while (--n > 0) {
-         byte[] b = buffersNotInUse.get(n);
-         if (b.length == length) {
+         byte[] b = buffersNotInUse.get(n).get();
+         if (b==null) buffersNotInUse.remove(n); // Obj fjernet af garbage collector
+         else if (b.length == length) {
             buffersNotInUse.remove(n);
             // Log.d("getFreeBuffer genbruger "+b);
             return b;
@@ -123,7 +125,7 @@ public class PcmAudioSink {
       long slut = System.currentTimeMillis();
       //Log.d("AudioTrack.write in " + (slut - tage) + " ms (wait " + (tage - start) + " ms)");
 
-      buffersNotInUse.add(buff);
+      buffersNotInUse.add(new SoftReference(buff));
       bytesInBuffer -= buff.length;
 
       if (getHandler() != null && getRunWhenPcmAudioSinkWrite() != null) {

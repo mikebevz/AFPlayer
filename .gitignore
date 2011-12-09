@@ -11,3 +11,4 @@ local.properties
 /ant.properties
 jni/xxx.map
 libs/armeabi/libffmpeg.so
+/jni/AFPlayer-jni/nbproject/private/

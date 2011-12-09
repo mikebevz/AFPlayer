@@ -1,10 +1,10 @@
 /**
- * This file is part of Sveriges Radio Play for Android
+ * This file is part Mikes FFMpeg Mediaplayer for Android
  *
- * Sveriges Radio Play for Android is free software: you can redistribute it and/or modify it under the terms of the GNU
+ * Mikes FFMpeg Mediaplayer for Android is free software: you can redistribute it and/or modify it under the terms of the GNU
  * General Public License version 2 as published by the Free Software Foundation.
  *
- * Sveriges Radio Play for Android is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * Mikes FFMpeg Mediaplayer for Android is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
  * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License
  * for more details.
  *
@@ -235,12 +235,14 @@ public class Afspiller_akt extends Activity implements OnClickListener {
                   bufferstr.setText("Buffer:\n" + mp.sink.bufferInSecs() + " sek");
                   if (tid_spiller == 0) {
                     tid_spiller = System.currentTimeMillis();
-                    String txt = "Tid start->data: "+(tid_førsteData - tid_brugerTrykketStart)/1000f+
+                    String txt = "hvor lang tid der gik fra start til der faktisk kom lyd:"+
+                            "\nTid start->data: "+(tid_førsteData - tid_brugerTrykketStart)/1000f+
                             "\nTid start->lyd:  "+(tid_spiller - tid_brugerTrykketStart)/1000f;
 
                     AlertDialog.Builder dialog=new AlertDialog.Builder(Afspiller_akt.this);
                     //dialog.setTitle("En AlertDialog");
                     dialog.setMessage(txt);
+                    dialog.setPositiveButton("OK", null);
                     dialog.show();
 
                     //Toast.makeText(Afspiller_akt.this, txt, Toast.LENGTH_LONG).show();
