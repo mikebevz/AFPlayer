@@ -20,11 +20,11 @@ extern int shutdown_engine();
 extern int start_audio_stream(JNIEnv *env, jobject obj, jstring filename);
 extern int stop_audio_stream();
 
-class fplayer {
+class MikesFfmpegPlayer {
 
 public:
-	fplayer();
-	~fplayer();
+	MikesFfmpegPlayer();
+	~MikesFfmpegPlayer();
 	void play(const char* filename, JNIEnv *env, jobject obj, jmethodID callback);
 	void play(const char* filename, const char* format, JNIEnv *env, jobject obj, jmethodID callback);
 	int stop();

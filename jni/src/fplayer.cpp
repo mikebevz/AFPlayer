@@ -96,7 +96,7 @@ void debug_log(const char *msg, int code) {
 
 // Start fplayer implementation
 
-fplayer::fplayer() :
+MikesFfmpegPlayer::MikesFfmpegPlayer() :
         m_stoprequested(false) {
 	engine_started = false;
 	file_iformat = NULL;
@@ -104,11 +104,11 @@ fplayer::fplayer() :
 
 }
 
-fplayer::~fplayer() {
+MikesFfmpegPlayer::~MikesFfmpegPlayer() {
 	//pthread_mutex_destroy(&m_mutex);
 }
 
-void fplayer::play(const char* filename, JNIEnv *env, jobject obj, jmethodID callback) {
+void MikesFfmpegPlayer::play(const char* filename, JNIEnv *env, jobject obj, jmethodID callback) {
 
 	stream_url = filename;
 	stream_callback = callback;
@@ -119,7 +119,7 @@ void fplayer::play(const char* filename, JNIEnv *env, jobject obj, jmethodID cal
 	do_play();
 }
 
-void fplayer::play(const char* filename, const char* format, JNIEnv *env, jobject obj, jmethodID callback) {
+void MikesFfmpegPlayer::play(const char* filename, const char* format, JNIEnv *env, jobject obj, jmethodID callback) {
 
 	stream_url = filename;
 	stream_callback = callback;
@@ -130,12 +130,12 @@ void fplayer::play(const char* filename, const char* format, JNIEnv *env, jobjec
 	do_play();
 }
 
-int fplayer::setSetupMethod(jmethodID method) {
+int MikesFfmpegPlayer::setSetupMethod(jmethodID method) {
    this->stream_setup_callback = method;
    return 0;
 }
 
-int fplayer::start_engine() {
+int MikesFfmpegPlayer::start_engine() {
 	if (engine_started == true) {
 		return ERROR_ALREADY_STARTED;
 	}
@@ -165,7 +165,7 @@ int fplayer::start_engine() {
 	return 0;
 }
 
-int fplayer::shutdown_engine() {
+int MikesFfmpegPlayer::shutdown_engine() {
 	if (engine_started == false) {
 		return ERROR_ALREADY_STOPPED;
 	}
@@ -173,7 +173,7 @@ int fplayer::shutdown_engine() {
 	return 0;
 }
 
-int fplayer::do_play() {
+int MikesFfmpegPlayer::do_play() {
 	/*
 	 while (!m_stoprequested) {
 	 pthread_mutex_lock(&m_mutex);
@@ -389,7 +389,7 @@ int fplayer::do_play() {
 }
 
 
-fplayer player;
+MikesFfmpegPlayer p;
 
 
 
@@ -409,7 +409,7 @@ JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1createEngine(
 	//jclass cls = env->GetObjectClass(obj);
 	//errorCallbackMethodId = env->GetMethodID(cls, "streamErrorCallback", "(Ljava/lang/String;I)V");
 
-	player.start_engine();
+	p.start_engine();
 }
 
 /**
@@ -418,8 +418,8 @@ JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1createEngine(
 JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1setDataSource__Ljava_lang_String_2(
 		JNIEnv *env, jobject obj, jstring path) {
    jboolean isCopy = JNI_TRUE;
-	player.stream_url = env->GetStringUTFChars(path, &isCopy);
-	__android_log_print(ANDROID_LOG_DEBUG, TAG, "Filename: %s", player.stream_url );
+	p.stream_url = env->GetStringUTFChars(path, &isCopy);
+	__android_log_print(ANDROID_LOG_DEBUG, TAG, "Filename: %s", p.stream_url );
 
 }
 
@@ -431,10 +431,10 @@ JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1setDataSource__Ljava_la
   (JNIEnv *env, jobject obj, jstring path, jstring format) {
 
         jboolean isCopy = JNI_TRUE;
-        player.stream_url = JNU_Get_Env()->GetStringUTFChars(path, &isCopy);
+        p.stream_url = JNU_Get_Env()->GetStringUTFChars(path, &isCopy);
 	//filename = path;
-	player.stream_format = JNU_Get_Env()->GetStringUTFChars(format, &isCopy);
-	__android_log_print(ANDROID_LOG_DEBUG, TAG, "Filename: %s. StreamFormat: %s", player.stream_url , player.stream_format);
+	p.stream_format = JNU_Get_Env()->GetStringUTFChars(format, &isCopy);
+	__android_log_print(ANDROID_LOG_DEBUG, TAG, "Filename: %s. StreamFormat: %s", p.stream_url , p.stream_format);
 
 }
 
@@ -443,7 +443,7 @@ JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1setDataSource__Ljava_la
  */
 JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1playStream(JNIEnv *env,
 		jobject obj) {
-	if (player.stream_url != 0) {
+	if (p.stream_url != 0) {
 		//start_audio_stream(env, obj, player.stream_url );
 
 		//const char *stream_path;
@@ -452,7 +452,7 @@ JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1playStream(JNIEnv *env,
 __android_log_print(ANDROID_LOG_ERROR, TAG, "XXX1");
 		//stream_path = filename;//(char*) env->GetStringUTFChars(player.stream_url , NULL);
 __android_log_print(ANDROID_LOG_ERROR, TAG, "XXX2");
-		format = player.stream_format;//(char*) env->GetStringUTFChars(stream_format, NULL);
+		format = p.stream_format;//(char*) env->GetStringUTFChars(stream_format, NULL);
 __android_log_print(ANDROID_LOG_ERROR, TAG, "XXX3");
 
 		jclass cls = env->GetObjectClass(obj);
@@ -462,7 +462,7 @@ __android_log_print(ANDROID_LOG_ERROR, TAG, "XXX3");
 
 		jmethodID setupMethod = env->GetMethodID(cls, "streamSetupCallback", "(I)I");
 		if (setupMethod != NULL) {
-		   player.setSetupMethod(setupMethod);
+		   p.setSetupMethod(setupMethod);
 		} else {
 		   __android_log_print(ANDROID_LOG_ERROR, TAG,
 		                  "Cannot get setup callback method");
@@ -473,10 +473,10 @@ __android_log_print(ANDROID_LOG_ERROR, TAG, "XXX3");
 			__android_log_print(ANDROID_LOG_ERROR, TAG,
 					"Cannot get callback method");
 		}
-		if (player.stream_format != NULL) {
-			player.play(player.stream_url, env, obj, method);
+		if (p.stream_format != NULL) {
+			p.play(p.stream_url, env, obj, method);
 		} else {
-			player.play(player.stream_url, format, env, obj, method);
+			p.play(p.stream_url, format, env, obj, method);
 		}
 
 	} else {
@@ -505,6 +505,6 @@ JNIEXPORT void JNICALL Java_org_fpl_ffmpeg_Manager_shutdownEngine(JNIEnv *env,
 		jobject obj) {
 	__android_log_write(ANDROID_LOG_DEBUG, TAG, "Shutdown engine");
 	//shutdown_engine();
-	player.shutdown_engine();
+	p.shutdown_engine();
 }
 
