@@ -27,14 +27,14 @@ extern "C" {
 #include "fplayer.h"
 
 
-jmethodID errorCallbackMethodId = NULL;
-jobject callbackObject = NULL;
+//jmethodID errorCallbackMethodId = NULL;
+//jobject callbackObject = NULL;
 /*
  * JNI Interface functions
  */
 JavaVM *cachedVM;
-static const char * filename = NULL;
-static const char * stream_format = NULL;
+//static const char * filename = NULL;
+//static const char * stream_format = NULL;
 
 jint JNI_OnLoad(JavaVM* jvm, void* reserved) {
 
@@ -43,8 +43,7 @@ jint JNI_OnLoad(JavaVM* jvm, void* reserved) {
 	__android_log_print(ANDROID_LOG_INFO, TAG, "JNI_OnLoad Called");
 
 	if (jvm->GetEnv((void **) &env, JNI_VERSION_1_6) != JNI_OK) {
-		__android_log_print(ANDROID_LOG_ERROR, TAG,
-				"Failed to get the environment using GetEnv()");
+		__android_log_print(ANDROID_LOG_ERROR, TAG, "Failed to get the environment using GetEnv()");
 		return -1;
 	}
 
@@ -98,8 +97,7 @@ void debug_log(const char *msg, int code) {
 // Start fplayer implementation
 
 fplayer::fplayer() :
-		m_stoprequested(false) {
-	//pthread_mutex_init(&m_mutex, NULL);
+        m_stoprequested(false) {
 	engine_started = false;
 	file_iformat = NULL;
 	stream_format = NULL;
@@ -110,8 +108,7 @@ fplayer::~fplayer() {
 	//pthread_mutex_destroy(&m_mutex);
 }
 
-void fplayer::play(const char* filename, JNIEnv *env, jobject obj,
-		jmethodID callback) {
+void fplayer::play(const char* filename, JNIEnv *env, jobject obj, jmethodID callback) {
 
 	stream_url = filename;
 	stream_callback = callback;
@@ -122,8 +119,7 @@ void fplayer::play(const char* filename, JNIEnv *env, jobject obj,
 	do_play();
 }
 
-void fplayer::play(const char* filename, const char* format, JNIEnv *env, jobject obj,
-		jmethodID callback) {
+void fplayer::play(const char* filename, const char* format, JNIEnv *env, jobject obj, jmethodID callback) {
 
 	stream_url = filename;
 	stream_callback = callback;
@@ -392,6 +388,7 @@ int fplayer::do_play() {
 
 }
 
+
 fplayer player;
 
 
@@ -408,9 +405,9 @@ JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1createEngine(
 
 	//"(Ljava/lang/String;I)V"
 
-	callbackObject = obj;
-	jclass cls = env->GetObjectClass(obj);
-	errorCallbackMethodId = env->GetMethodID(cls, "streamErrorCallback", "(Ljava/lang/String;I)V");
+	//callbackObject = obj;
+	//jclass cls = env->GetObjectClass(obj);
+	//errorCallbackMethodId = env->GetMethodID(cls, "streamErrorCallback", "(Ljava/lang/String;I)V");
 
 	player.start_engine();
 }
@@ -421,8 +418,8 @@ JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1createEngine(
 JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1setDataSource__Ljava_lang_String_2(
 		JNIEnv *env, jobject obj, jstring path) {
    jboolean isCopy = JNI_TRUE;
-	filename = env->GetStringUTFChars(path, &isCopy);
-	__android_log_print(ANDROID_LOG_DEBUG, TAG, "Filename: %s. StreamFormat: %s", filename, stream_format);
+	player.stream_url = env->GetStringUTFChars(path, &isCopy);
+	__android_log_print(ANDROID_LOG_DEBUG, TAG, "Filename: %s", player.stream_url );
 
 }
 
@@ -433,11 +430,11 @@ JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1setDataSource__Ljava_la
 JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1setDataSource__Ljava_lang_String_2Ljava_lang_String_2
   (JNIEnv *env, jobject obj, jstring path, jstring format) {
 
-   jboolean isCopy = JNI_TRUE;
-   filename = JNU_Get_Env()->GetStringUTFChars(path, &isCopy);
+        jboolean isCopy = JNI_TRUE;
+        player.stream_url = JNU_Get_Env()->GetStringUTFChars(path, &isCopy);
 	//filename = path;
-	stream_format = JNU_Get_Env()->GetStringUTFChars(format, &isCopy);
-	__android_log_print(ANDROID_LOG_DEBUG, TAG, "Filename: %s. StreamFormat: %s", filename, stream_format);
+	player.stream_format = JNU_Get_Env()->GetStringUTFChars(format, &isCopy);
+	__android_log_print(ANDROID_LOG_DEBUG, TAG, "Filename: %s. StreamFormat: %s", player.stream_url , player.stream_format);
 
 }
 
@@ -446,16 +443,16 @@ JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1setDataSource__Ljava_la
  */
 JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1playStream(JNIEnv *env,
 		jobject obj) {
-	if (filename != 0) {
-		//start_audio_stream(env, obj, filename);
+	if (player.stream_url != 0) {
+		//start_audio_stream(env, obj, player.stream_url );
 
-		const char *stream_path;
+		//const char *stream_path;
 		const char *format;
 
 __android_log_print(ANDROID_LOG_ERROR, TAG, "XXX1");
-		stream_path = filename;//(char*) env->GetStringUTFChars(filename, NULL);
+		//stream_path = filename;//(char*) env->GetStringUTFChars(player.stream_url , NULL);
 __android_log_print(ANDROID_LOG_ERROR, TAG, "XXX2");
-		format = stream_format;//(char*) env->GetStringUTFChars(stream_format, NULL);
+		format = player.stream_format;//(char*) env->GetStringUTFChars(stream_format, NULL);
 __android_log_print(ANDROID_LOG_ERROR, TAG, "XXX3");
 
 		jclass cls = env->GetObjectClass(obj);
@@ -476,10 +473,10 @@ __android_log_print(ANDROID_LOG_ERROR, TAG, "XXX3");
 			__android_log_print(ANDROID_LOG_ERROR, TAG,
 					"Cannot get callback method");
 		}
-		if (stream_format != NULL) {
-			player.play(stream_path, env, obj, method);
+		if (player.stream_format != NULL) {
+			player.play(player.stream_url, env, obj, method);
 		} else {
-			player.play(stream_path, format, env, obj, method);
+			player.play(player.stream_url, format, env, obj, method);
 		}
 
 	} else {

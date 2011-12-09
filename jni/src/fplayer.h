@@ -32,6 +32,15 @@ public:
 	int shutdown_engine();
 	int setSetupMethod(jmethodID method);
 
+	/**
+	 * Audio stream URI
+	 */
+	const char *stream_url;
+
+	/**
+	 * Audio stream format
+	 */
+	const char *stream_format;
 
 private:
 
@@ -46,27 +55,18 @@ private:
 	// only for async thread: volatile bool m_running;
 
 
-	pthread_mutex_t m_mutex;
+	//pthread_mutex_t m_mutex;
 
 	/**
 	 * Stream playback thread id
 	 */
-	pthread_t m_thread;
+	//pthread_t m_thread;
 
 	/**
 	 * Is the audio engine was already initialized
 	 */
 	bool engine_started;
 
-	/**
-	 * Audio stream URI
-	 */
-	const char *stream_url;
-
-	/**
-	 * Audio stream format
-	 */
-	const char *stream_format;
 
 
 
