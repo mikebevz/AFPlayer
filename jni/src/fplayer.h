@@ -25,8 +25,6 @@ class MikesFfmpegPlayer {
 public:
 	MikesFfmpegPlayer();
 	~MikesFfmpegPlayer();
-	void play(const char* filename, JNIEnv *env, jobject obj, jmethodID callback);
-	void play(const char* filename, const char* format, JNIEnv *env, jobject obj, jmethodID callback);
 	int stop();
 	int start_engine();
 	int shutdown_engine();
@@ -41,6 +39,20 @@ public:
 	 * Audio stream format
 	 */
 	const char *stream_format;
+
+
+	/**
+	 * TODO Consider if these are needed
+	 */
+	_jmethodID *stream_callback;
+	_jmethodID *stream_setup_callback;
+	_jobject *stream_object;
+	JNIEnv *stream_env;
+
+	/**
+	 * Perform stream playback
+	 */
+	int do_play();
 
 private:
 
@@ -69,14 +81,6 @@ private:
 
 
 
-
-	/**
-	 * TODO Consider if these are needed
-	 */
-	_jmethodID *stream_callback;
-	_jmethodID *stream_setup_callback;
-	_jobject *stream_object;
-    JNIEnv *stream_env;
 
 
     AVFormatContext *pFormatCtx;
@@ -131,10 +135,6 @@ private:
      */
 	//static void* start_thread(void *obj);
 
-	/**
-	 * Perform stream playback
-	 */
-	int do_play();
 };
 
 #else

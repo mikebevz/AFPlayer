@@ -100,7 +100,7 @@ MikesFfmpegPlayer::MikesFfmpegPlayer() :
         m_stoprequested(false) {
 	engine_started = false;
 	file_iformat = NULL;
-	stream_format = NULL;
+	stream_url = stream_format = NULL;
 
 }
 
@@ -108,32 +108,6 @@ MikesFfmpegPlayer::~MikesFfmpegPlayer() {
 	//pthread_mutex_destroy(&m_mutex);
 }
 
-void MikesFfmpegPlayer::play(const char* filename, JNIEnv *env, jobject obj, jmethodID callback) {
-
-	stream_url = filename;
-	stream_callback = callback;
-	stream_object = obj;
-	stream_env = env;
-
-	m_stoprequested = false;
-	do_play();
-}
-
-void MikesFfmpegPlayer::play(const char* filename, const char* format, JNIEnv *env, jobject obj, jmethodID callback) {
-
-	stream_url = filename;
-	stream_callback = callback;
-	stream_object = obj;
-	stream_env = env;
-	stream_format = format;
-	m_stoprequested = false;
-	do_play();
-}
-
-int MikesFfmpegPlayer::setSetupMethod(jmethodID method) {
-   this->stream_setup_callback = method;
-   return 0;
-}
 
 int MikesFfmpegPlayer::start_engine() {
 	if (engine_started == true) {
@@ -174,6 +148,7 @@ int MikesFfmpegPlayer::shutdown_engine() {
 }
 
 int MikesFfmpegPlayer::do_play() {
+	m_stoprequested = false;
 	/*
 	 while (!m_stoprequested) {
 	 pthread_mutex_lock(&m_mutex);
@@ -441,43 +416,28 @@ JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1setDataSource__Ljava_la
 /**
  * Start playing stream back
  */
-JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1playStream(JNIEnv *env,
-		jobject obj) {
+JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1playStream(JNIEnv *env, jobject obj) {
 	if (p.stream_url != 0) {
-		//start_audio_stream(env, obj, player.stream_url );
-
-		//const char *stream_path;
-		const char *format;
-
-__android_log_print(ANDROID_LOG_ERROR, TAG, "XXX1");
-		//stream_path = filename;//(char*) env->GetStringUTFChars(player.stream_url , NULL);
-__android_log_print(ANDROID_LOG_ERROR, TAG, "XXX2");
-		format = p.stream_format;//(char*) env->GetStringUTFChars(stream_format, NULL);
-__android_log_print(ANDROID_LOG_ERROR, TAG, "XXX3");
 
 		jclass cls = env->GetObjectClass(obj);
 		if (!cls) {
 			__android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot get class");
 		}
 
-		jmethodID setupMethod = env->GetMethodID(cls, "streamSetupCallback", "(I)I");
-		if (setupMethod != NULL) {
-		   p.setSetupMethod(setupMethod);
-		} else {
-		   __android_log_print(ANDROID_LOG_ERROR, TAG,
-		                  "Cannot get setup callback method");
+		p.stream_setup_callback = env->GetMethodID(cls, "streamSetupCallback", "(I)I");
+		if (!p.stream_setup_callback) {
+		   __android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot get setup callback method");
 		}
 
-		jmethodID method = env->GetMethodID(cls, "streamCallback", "([BI)I");
-		if (!method) {
-			__android_log_print(ANDROID_LOG_ERROR, TAG,
-					"Cannot get callback method");
+		p.stream_callback = env->GetMethodID(cls, "streamCallback", "([BI)I");
+		if (!p.stream_callback) {
+                    __android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot get callback method");
 		}
-		if (p.stream_format != NULL) {
-			p.play(p.stream_url, env, obj, method);
-		} else {
-			p.play(p.stream_url, format, env, obj, method);
-		}
+
+                p.stream_object = obj;
+                p.stream_env = env;
+
+                p.do_play();
 
 	} else {
 		jclass excCls = env->FindClass("java/lang/IllegalArgumentException");
