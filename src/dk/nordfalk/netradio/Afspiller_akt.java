@@ -67,6 +67,30 @@ public class Afspiller_akt extends Activity implements OnClickListener {
          { "DR P3 Icy/mp3", "http://live-icy.gss.dr.dk:8000/Channel5_LQ.mp3", "mp3" },
          { "DR P3 RTSP", "rtsp://artsp.gss.dr.dk/A/A03L.stream" },
          { "Sverige P3 rtsp", "rtsp://mobil-live.sr.se/mobilradio/kanaler/p3-aac-96" },
+
+         { "EO Muzaiko", "http://listen.radionomy.com/muzaikoinfo.m3u" },
+         { "EO Muzaiko rekte", "http://listen.radionomy.com/muzaikoinfo" },
+         { "EO muzaiko", "http://esperanto-radio.com/muzaikonun" },
+         { "EO krokoloko", "http://esperanto-radio.com/krokolokonun" },
+         { "EO radiovatikana", "http://esperanto-radio.com/radiovatikananun" },
+/*
+<option class="v2" value='http://esperanto-radio.com/cri'>&#264;ina Radio Internacia</option>
+<option class="v2" value='http://esperanto-radio.com/kaliningrada'>Kaliningrada E-radio</option>
+<option class="v2" value='http://esperanto-radio.com/3zzzradio'>3ZZZ en Esperanto</option>
+<option class="v2" value='http://esperanto-radio.com/krokoloko'>Krokoloko</option>
+<option class="v2" value='http://esperanto-radio.com/muzaiko'>Muzaiko</option>
+<option class="v2" value='http://esperanto-radio.com/parolumondo'>Parolu Mondo</option>
+<option class="v2" value='http://esperanto-radio.com/peranto'>Peranto</option>
+<option class="v2" value='http://esperanto-radio.com/polaretradio'>Pola Retradio</option>
+<option class="v2" value='http://esperanto-radio.com/radioaktiva'>Radio Aktiva Urugvajo</option>
+<option class="v2" value='http://esperanto-radio.com/radiokubo'>Radio Havano Kubo</option>
+<option class="v2" value='http://esperanto-radio.com/radiovatikana'>Radio Vatikana</option>
+<option class="v2" value='http://esperanto-radio.com/radioverda'>Radio Verda</option>
+<option class="v2" value='http://esperanto-radio.com/varsoviavento'>Varsovia Vento</option>
+<option class="v2" value='http://esperanto-radio.com/verdastacio'>Verda Stacio</option>
+<option class="v2" value='http://esperanto-radio.com/vinilkosmo'>Vinilkosmo</option>
+<option class="v2" value='http://esperanto-radio.com/vej'>Voĉoj el Japanio</option>
+          */
                                                              };
    // private int[] afspilningskvalitet = new int[kanaler.length];
    String[]                          afspilningskvalitetNavn = { "-", "Godt", "Afbrydelser", "Virker ikke!" };

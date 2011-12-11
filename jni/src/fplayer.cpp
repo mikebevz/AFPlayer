@@ -27,14 +27,10 @@ extern "C" {
 #include "fplayer.h"
 
 
-//jmethodID errorCallbackMethodId = NULL;
-//jobject callbackObject = NULL;
 /*
  * JNI Interface functions
  */
 JavaVM *cachedVM;
-//static const char * filename = NULL;
-//static const char * stream_format = NULL;
 
 jint JNI_OnLoad(JavaVM* jvm, void* reserved) {
 
@@ -50,6 +46,7 @@ jint JNI_OnLoad(JavaVM* jvm, void* reserved) {
 	return JNI_VERSION_1_6;
 }
 
+/*
 JNIEXPORT void JNICALL
 JNI_OnUnload(JavaVM *jvm, void *reserved) {
 	JNIEnv *env;
@@ -59,6 +56,8 @@ JNI_OnUnload(JavaVM *jvm, void *reserved) {
 	//(*env)->DeleteWeakGlobalRef(env, );
 	return;
 }
+*/
+
 
 /**
  * Get cached environment
@@ -79,9 +78,10 @@ void debug_log(const char *msg, int code) {
 
 	//TODO when code=0 it's not an error
 	char errstr[200];
-	int r = av_strerror(code, errstr, 200);
-
-	__android_log_print(ANDROID_LOG_DEBUG, TAG, "%s (%d): %s", msg, code, errstr);
+	if (!av_strerror(code, errstr, 200))
+                __android_log_print(ANDROID_LOG_DEBUG, TAG, "%s (%d): %s", msg, code, errstr);
+        else
+                __android_log_print(ANDROID_LOG_DEBUG, TAG, "%s (%d)", msg, code);
 
 	/*
 	if (errorCallbackMethodId != NULL) {
@@ -122,14 +122,14 @@ int MikesFfmpegPlayer::start_engine() {
 	avdevice_register_all();
 
 	//Show all supported input formats in log
-	while (p = av_iformat_next(p)) {
+	while ((p = av_iformat_next(p))) {
 		//TODO return list of formats to mediaplayer
 		__android_log_print(ANDROID_LOG_DEBUG, TAG, "Input format: %s", p->name);
 	}
 
 	URLProtocol *prot = NULL;
 
-	while (prot = av_protocol_next(prot)) {
+	while ((prot = av_protocol_next(prot))) {
 		//TODO return list of protocols supported
 		__android_log_print(ANDROID_LOG_DEBUG, TAG, "Protocol: %s", prot->name);
 	}
@@ -149,21 +149,12 @@ int MikesFfmpegPlayer::shutdown_engine() {
 
 int MikesFfmpegPlayer::do_play() {
 	m_stoprequested = false;
-	/*
-	 while (!m_stoprequested) {
-	 pthread_mutex_lock(&m_mutex);
-	 __android_log_print(ANDROID_LOG_DEBUG, TAG, "PLAY!!! File: %s", stream_url);
-	 pthread_mutex_unlock(&m_mutex);
-	 }*/
-	//__android_log_print(ANDROID_LOG_DEBUG, TAG, "do_play()");
 
 	int OUT_BUFFER_SIZE = AVCODEC_MAX_AUDIO_FRAME_SIZE * 8;
 	char* samples = (char *) av_malloc(OUT_BUFFER_SIZE);
 
 	if (stream_url == NULL) {
 		debug_log("Stream URL is not defined", NULL);
-		//__android_log_print(ANDROID_LOG_DEBUG, TAG, "do_play()");
-		//pthread_exit(&m_thread);
 		return ERROR_NO_STREAM_ADDRESS;
 	}
 
@@ -187,7 +178,6 @@ int MikesFfmpegPlayer::do_play() {
 
 	status = avformat_open_input(&pFormatCtx, stream_url, file_iformat, options);
 	if (status != 0) {
-
 		debug_log("Cannot open stream.", status);
 		//__android_log_print(ANDROID_LOG_ERROR, TAG, "Cannot open stream. Status: %d", status);
 		return ERROR_CANNOT_OPEN_STREAM;
@@ -195,7 +185,7 @@ int MikesFfmpegPlayer::do_play() {
 
 	//populates AVFormatContex structure
 	status = av_find_stream_info(pFormatCtx);
-	if (status != NULL && status < 0) {
+	if (status < 0) {
 		debug_log("Cannot read stream info.", status);
 		return ERROR_CANNOT_READ_STREAM_INFO;
 	}
@@ -387,13 +377,27 @@ JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1createEngine(
 	p.start_engine();
 }
 
+void copyJavaStringToC(JNIEnv *env, jstring path, char* const* dest)
+{
+    jboolean isCopy;
+    const char* str = env->GetStringUTFChars(path, &isCopy);
+
+    // If C string already have a value, free it
+    //free(*dest); // XXX TODO fix, det her giver hukommelseslæk
+    *dest = strdup(str);
+
+    env->ReleaseStringUTFChars(path, str);
+}
+
+
 /**
  * Set data source
  */
 JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1setDataSource__Ljava_lang_String_2(
 		JNIEnv *env, jobject obj, jstring path) {
-   jboolean isCopy = JNI_TRUE;
-	p.stream_url = env->GetStringUTFChars(path, &isCopy);
+	//jboolean isCopy = JNI_TRUE;
+	//p.stream_url = env->GetStringUTFChars(path, &isCopy);
+        copyJavaStringToC(env, path, &p.stream_url);
 	__android_log_print(ANDROID_LOG_DEBUG, TAG, "Filename: %s", p.stream_url );
 
 }
@@ -405,10 +409,12 @@ JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1setDataSource__Ljava_la
 JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1setDataSource__Ljava_lang_String_2Ljava_lang_String_2
   (JNIEnv *env, jobject obj, jstring path, jstring format) {
 
-        jboolean isCopy = JNI_TRUE;
-        p.stream_url = JNU_Get_Env()->GetStringUTFChars(path, &isCopy);
-	//filename = path;
-	p.stream_format = JNU_Get_Env()->GetStringUTFChars(format, &isCopy);
+        //jboolean isCopy = JNI_TRUE;
+        //p.stream_url = JNU_Get_Env()->GetStringUTFChars(path, &isCopy);
+	//p.stream_format = JNU_Get_Env()->GetStringUTFChars(format, &isCopy);
+        copyJavaStringToC(env, path, &p.stream_url);
+        copyJavaStringToC(env, format, &p.stream_format);
+
 	__android_log_print(ANDROID_LOG_DEBUG, TAG, "Filename: %s. StreamFormat: %s", p.stream_url , p.stream_format);
 
 }
@@ -451,8 +457,7 @@ JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1playStream(JNIEnv *env,
 /**
  * Stop playing the stream
  */
-JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1stopStream(JNIEnv *env,
-		jobject obj) {
+JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1stopStream(JNIEnv *env, jobject obj) {
 	__android_log_write(ANDROID_LOG_DEBUG, TAG, "Stop Playing Stream");
 	//stop_audio_stream();
 	//player.stop();
@@ -461,8 +466,7 @@ JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1stopStream(JNIEnv *env,
 /**
  * Shutdown audio engine
  */
-JNIEXPORT void JNICALL Java_org_fpl_ffmpeg_Manager_shutdownEngine(JNIEnv *env,
-		jobject obj) {
+JNIEXPORT void JNICALL Java_org_fpl_ffmpeg_Manager_shutdownEngine(JNIEnv *env, jobject obj) {
 	__android_log_write(ANDROID_LOG_DEBUG, TAG, "Shutdown engine");
 	//shutdown_engine();
 	p.shutdown_engine();

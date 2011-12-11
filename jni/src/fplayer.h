@@ -1,17 +1,9 @@
 #ifndef FPLAYER
 #define FPLAYER
 
-#ifdef __cplusplus
-
-#else
-
-#endif
 
 #ifdef __cplusplus
 extern "C" {
-#endif
-
-#if defined(__cplusplus)
 
 #include <android/log.h>
 
@@ -129,25 +121,9 @@ private:
      */
     static const int ERROR_CANNOT_FIND_FORMAT = -1029;
 
-    /**
-     * Start a new thread
-     * @param obj
-     */
-	//static void* start_thread(void *obj);
 
 };
 
-#else
-
-extern int start_engine();
-extern int shutdown_engine();
-extern int start_audio_stream(JNIEnv *env,
-		jobject obj, jstring filename);
-extern int stop_audio_stream();
-
-#endif
-
-#ifdef __cplusplus
 }
 #endif
 

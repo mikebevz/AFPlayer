@@ -240,6 +240,7 @@ public class MediaPlayer {
          }
 
          sink.putData(data, length);
+         //Log.d(TAG, "data,"+length+ " buffer " + sink.bytesInBuffer + " b (" + sink.bufferInSecs() + " sek)");
 
          if (!isPlaying()) {
 
