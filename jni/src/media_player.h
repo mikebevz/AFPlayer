@@ -13,7 +13,7 @@ extern "C" {
  * Signature: (Ljava/lang/ref/WeakReference;)V
  */
 JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1createEngine
-  (JNIEnv *env, jobject obj, jobject mplayer);
+  (JNIEnv *env, jobject obj);
 
 /*
  * Class:     org_fpl_media_MediaPlayer

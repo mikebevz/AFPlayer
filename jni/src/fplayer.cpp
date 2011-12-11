@@ -26,6 +26,7 @@ extern "C" {
 #include "media_player.h"
 #include "fplayer.h"
 
+#define UNUSED(x) (void)(x)
 
 /*
  * JNI Interface functions
@@ -33,7 +34,7 @@ extern "C" {
 JavaVM *cachedVM;
 
 jint JNI_OnLoad(JavaVM* jvm, void* reserved) {
-
+    UNUSED(reserved);
 	JNIEnv *env;
 	cachedVM = jvm;
 	__android_log_print(ANDROID_LOG_INFO, TAG, "JNI_OnLoad Called");
@@ -207,7 +208,7 @@ int MikesFfmpegPlayer::do_play() {
 	// Find audio stream
 	//TODO selects only first stream
 	int audioStream;
-	for (int i = 0; i < pFormatCtx->nb_streams; i++) {
+	for (unsigned int i = 0; i < pFormatCtx->nb_streams; i++) {
 		if (pFormatCtx->streams[i]->codec->codec_type == AVMEDIA_TYPE_AUDIO) {
 			audioStream = i;
 			__android_log_print(ANDROID_LOG_DEBUG, TAG, "Stream ID: %d selected", pFormatCtx->streams[i]->id);
@@ -362,22 +363,17 @@ MikesFfmpegPlayer p;
  * Set up audio engine
  */
 JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1createEngine(
-		JNIEnv *env, jobject obj, jobject mplayer) {
+		JNIEnv *env, jobject obj) {
+    UNUSED(env);
+    UNUSED(obj);
 
 	__android_log_print(ANDROID_LOG_DEBUG, TAG, "Create Engine");
 
-	//start_engine();
-
-	//"(Ljava/lang/String;I)V"
-
-	//callbackObject = obj;
-	//jclass cls = env->GetObjectClass(obj);
-	//errorCallbackMethodId = env->GetMethodID(cls, "streamErrorCallback", "(Ljava/lang/String;I)V");
 
 	p.start_engine();
 }
 
-void copyJavaStringToC(JNIEnv *env, jstring path, char* const* dest)
+void copyJavaStringToC(JNIEnv *env, jstring path, const char** dest)
 {
     jboolean isCopy;
     const char* str = env->GetStringUTFChars(path, &isCopy);
@@ -395,8 +391,7 @@ void copyJavaStringToC(JNIEnv *env, jstring path, char* const* dest)
  */
 JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1setDataSource__Ljava_lang_String_2(
 		JNIEnv *env, jobject obj, jstring path) {
-	//jboolean isCopy = JNI_TRUE;
-	//p.stream_url = env->GetStringUTFChars(path, &isCopy);
+    UNUSED(obj);
         copyJavaStringToC(env, path, &p.stream_url);
 	__android_log_print(ANDROID_LOG_DEBUG, TAG, "Filename: %s", p.stream_url );
 
@@ -408,10 +403,8 @@ JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1setDataSource__Ljava_la
  */
 JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1setDataSource__Ljava_lang_String_2Ljava_lang_String_2
   (JNIEnv *env, jobject obj, jstring path, jstring format) {
+    UNUSED(obj);
 
-        //jboolean isCopy = JNI_TRUE;
-        //p.stream_url = JNU_Get_Env()->GetStringUTFChars(path, &isCopy);
-	//p.stream_format = JNU_Get_Env()->GetStringUTFChars(format, &isCopy);
         copyJavaStringToC(env, path, &p.stream_url);
         copyJavaStringToC(env, format, &p.stream_format);
 
@@ -458,6 +451,8 @@ JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1playStream(JNIEnv *env,
  * Stop playing the stream
  */
 JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1stopStream(JNIEnv *env, jobject obj) {
+    UNUSED(env);
+    UNUSED(obj);
 	__android_log_write(ANDROID_LOG_DEBUG, TAG, "Stop Playing Stream");
 	//stop_audio_stream();
 	//player.stop();
@@ -467,6 +462,8 @@ JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1stopStream(JNIEnv *env,
  * Shutdown audio engine
  */
 JNIEXPORT void JNICALL Java_org_fpl_ffmpeg_Manager_shutdownEngine(JNIEnv *env, jobject obj) {
+    UNUSED(env);
+    UNUSED(obj);
 	__android_log_write(ANDROID_LOG_DEBUG, TAG, "Shutdown engine");
 	//shutdown_engine();
 	p.shutdown_engine();

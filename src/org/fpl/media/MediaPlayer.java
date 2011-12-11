@@ -66,7 +66,7 @@ public class MediaPlayer {
    public MediaPlayer() {
       Log.d(TAG, "Create new MediaPlayer");
 
-      n_createEngine(new WeakReference<MediaPlayer>(this));
+      n_createEngine();
 
    }
 
@@ -77,10 +77,8 @@ public class MediaPlayer {
    /**
     * Set up what needs to be set up in JNI
     *
-    * @param mplayer
-    *           Reference to MediaPlayer
     */
-   public native void n_createEngine(WeakReference<MediaPlayer> mplayer);
+   public native void n_createEngine();
 
    /**
     * Start playing stream back
