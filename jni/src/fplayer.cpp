@@ -373,13 +373,13 @@ JNIEXPORT void JNICALL Java_org_fpl_media_MediaPlayer_n_1createEngine(
 	p.start_engine();
 }
 
-void copyJavaStringToC(JNIEnv *env, jstring path, const char** dest)
+void copyJavaStringToC(JNIEnv *env, jstring path, char** dest)
 {
     jboolean isCopy;
     const char* str = env->GetStringUTFChars(path, &isCopy);
 
-    // If C string already have a value, free it
-    //free(*dest); // XXX TODO fix, det her giver hukommelseslæk
+
+    free(*dest); // If C string already have a value, free it
     *dest = strdup(str);
 
     env->ReleaseStringUTFChars(path, str);

@@ -25,12 +25,12 @@ public:
 	/**
 	 * Audio stream URI
 	 */
-	const char *stream_url;
+	char *stream_url;
 
 	/**
 	 * Audio stream format
 	 */
-	const char *stream_format;
+	char *stream_format;
 
 
 	/**
