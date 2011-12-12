@@ -187,6 +187,7 @@ public class MediaPlayer {
             Log.d(TAG, "PlayThread: invoking n_playStream... ");
             n_playStream();
             Log.d(TAG, "PlayThread: n_playStream finished.");
+            isPlaying = false;
             sink.stopPlay();
          }
       };

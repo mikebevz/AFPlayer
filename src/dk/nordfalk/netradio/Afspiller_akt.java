@@ -57,22 +57,17 @@ public class Afspiller_akt extends Activity implements OnClickListener {
    private CheckBox                  addBuzzTone;
    // private Spinner kanalSpinner;
    private String[][]                kanaler                 = {
-         // { "P3 rtsp LQ", "rtsp://live-rtsp.dr.dk/rtplive/_definst_/Channel5_LQ.stream", "aac" }, - Gives error -
-         // Could not open codecs
          { "Dubstep Radio 1 mp3 80", "http://178.32.253.144:8026" },
          { "Dubstep Radio 2 mp3 196", "http://lemon.citrus3.com:8062" },
-         { "DR P1 HLS", "http://ahls.gss.dr.dk/A/A03L.stream/Playlist.m3u8" },
-         { "DR P2 HLS", "http://ahls.gss.dr.dk/A/A04L.stream/Playlist.m3u8" },
-         { "DR P3 HLS", "http://ahls.gss.dr.dk/A/A05L.stream/Playlist.m3u8" },
-         { "DR P3 Icy/mp3", "http://live-icy.gss.dr.dk:8000/Channel5_LQ.mp3", "mp3" },
-         { "DR P3 RTSP", "rtsp://artsp.gss.dr.dk/A/A03L.stream" },
-         { "Sverige P3 rtsp", "rtsp://mobil-live.sr.se/mobilradio/kanaler/p3-aac-96" },
-
-         { "EO Muzaiko", "http://listen.radionomy.com/muzaikoinfo.m3u" },
-         { "EO Muzaiko rekte", "http://listen.radionomy.com/muzaikoinfo" },
-         { "EO muzaiko", "http://esperanto-radio.com/muzaikonun" },
+         { "EO Muzaiko", "http://listen.radionomy.com/muzaikoinfo" },
          { "EO krokoloko", "http://esperanto-radio.com/krokolokonun" },
          { "EO radiovatikana", "http://esperanto-radio.com/radiovatikananun" },
+         { "Sverige P3 rtsp", "rtsp://mobil-live.sr.se/mobilradio/kanaler/p3-aac-96" },
+         { "DR P1 HLS", "http://ahls.gss.dr.dk/A/A03L.stream/Playlist.m3u8" },
+         { "DR P2 HLS", "http://ahls.gss.dr.dk/A/A04L.stream/Playlist.m3u8" },
+         { "DR P3 Icy/mp3", "http://live-icy.gss.dr.dk:8000/Channel5_LQ.mp3", "mp3" },
+         { "DR P3 RTSP", "rtsp://artsp.gss.dr.dk/A/A03L.stream" },
+         { "DR P3 HLS", "http://ahls.gss.dr.dk/A/A05L.stream/Playlist.m3u8" },
 /*
 <option class="v2" value='http://esperanto-radio.com/cri'>&#264;ina Radio Internacia</option>
 <option class="v2" value='http://esperanto-radio.com/kaliningrada'>Kaliningrada E-radio</option>
@@ -287,16 +282,11 @@ public class Afspiller_akt extends Activity implements OnClickListener {
             Log.d("XXXXXX .setPlaybackPositionUpdateListener ");
             mp.start();
 
-            /*
-             * // meget MEGET hacky måde at holde telefonen vågen på!!!!!! androidMp =
-             * android.media.MediaPlayer.create(this, Uri.parse(url)); androidMp.setVolume(0.1f, 0.1f);
-             * androidMp.start();
-             */
             if (holdTelefonVågen != null)
                holdTelefonVågen.acquire();
             // cm.startUsingNetworkFeature(ConnectivityManager.TYPE_MOBILE, null);
             cm.startUsingNetworkFeature(ConnectivityManager.TYPE_WIFI, null);
-            startStopKnap.setText("Stopx");
+            startStopKnap.setText("Stop");
          } else {
             mp.stop();
             if (holdTelefonVågen != null)
