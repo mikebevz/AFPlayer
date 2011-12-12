@@ -204,7 +204,7 @@ public class MediaPlayer {
    public void stop() throws IllegalStateException {
       // n_stopStream();
       if (isPlaying)
-         PcmAudioSink.getTrack().stop();
+         sink.track.stop();
       stopRequested = true;
 
    }
@@ -237,6 +237,10 @@ public class MediaPlayer {
                data[i] += i % 5 * 15;
          }
 
+         if (sink.handler != null && getRunWhenstreamCallback() != null) {
+            sink.handler.post(getRunWhenstreamCallback());
+         }
+
          sink.putData(data, length);
          //Log.d(TAG, "data,"+length+ " buffer " + sink.bytesInBuffer + " b (" + sink.bufferInSecs() + " sek)");
 
@@ -249,11 +253,13 @@ public class MediaPlayer {
             // Enough data - start playing
             sink.startPlay();
             setPlaying(true);
-         }
+         } else try {
 
-         if (sink.getHandler() != null && getRunWhenstreamCallback() != null) {
-            sink.getHandler().post(getRunWhenstreamCallback());
-         }
+            // Wait if too much data
+            while (sink.bytesInBuffer > sink.maxBufferInSeconds * sink.bytesPerSecond) {
+               synchronized (sink) { sink.wait(1000); }
+            }
+         } catch (InterruptedException e) {}
 
          if (sink.result < 0) {
             Log.e(TAG, "Cannot write to AudioTrack. Ret Code: " + sink.result);
@@ -273,10 +279,6 @@ public class MediaPlayer {
 
    public Runnable getRunWhenstreamCallback() {
       return runWhenstreamCallback;
-   }
-
-   public void setRunWhenStreamCallback(Runnable runWhenstreamCallback) {
-      this.setRunWhenstreamCallback(runWhenstreamCallback);
    }
 
    public void setRunWhenstreamCallback(Runnable runWhenstreamCallback) {

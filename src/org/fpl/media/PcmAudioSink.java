@@ -20,15 +20,16 @@ import java.lang.ref.SoftReference;
 public class PcmAudioSink {
 
    private static final String        TAG                      = "PcmAudioSink";
-   private Handler                    handler;
-   private Runnable                   runWhenPcmAudioSinkWrite;
+   Handler                    handler;
+   Runnable                   runWhenPcmAudioSinkWrite;
+   AudioTrack          track;
 
-   private static AudioTrack          track;
    int                                bytesPerSecond;
    final int                          preferredBufferInSeconds = 9;
-   public LinkedBlockingQueue<byte[]> buffersInUse             = new LinkedBlockingQueue<byte[]>();
-   public int                         bytesInBuffer            = 0;
-   public ArrayList<SoftReference<byte[]>> buffersNotInUse     = new ArrayList<SoftReference<byte[]>>();
+   final int                          maxBufferInSeconds = 40;
+   LinkedBlockingQueue<byte[]> buffersInUse             = new LinkedBlockingQueue<byte[]>();
+   int                         bytesInBuffer            = 0;
+   ArrayList<SoftReference<byte[]>> buffersNotInUse     = new ArrayList<SoftReference<byte[]>>();
    int                                result;
 
    public PcmAudioSink() {
@@ -44,12 +45,12 @@ public class PcmAudioSink {
 
       int bufferSize = 176400; // minBufSize * 8
       // int bufferSize = 86016;
-      setTrack(new AudioTrack(AudioManager.STREAM_MUSIC, getSampleRateInHz(), channelConfig, audioFormat, bufferSize, AudioTrack.MODE_STREAM));
+      track = new AudioTrack(AudioManager.STREAM_MUSIC, getSampleRateInHz(), channelConfig, audioFormat, bufferSize, AudioTrack.MODE_STREAM);
 
-      bytesPerSecond = getTrack().getChannelCount() * getTrack().getSampleRate()
-            * (getTrack().getAudioFormat() == AudioFormat.ENCODING_PCM_16BIT ? 2 : 1);
+      bytesPerSecond = track.getChannelCount() * track.getSampleRate()
+            * (track.getAudioFormat() == AudioFormat.ENCODING_PCM_16BIT ? 2 : 1);
 
-      Log.d("X " + bytesPerSecond + "  " + getTrack().getChannelCount() + "  " + getTrack().getSampleRate() + "  " + getTrack().getAudioFormat());
+      Log.d("X " + bytesPerSecond + "  " + track.getChannelCount() + "  " + track.getSampleRate() + "  " + track.getAudioFormat());
       Log.d("Manager", "Buffer size - min: " + minBufSize + "  - (" + minBufSize * 1000 / bytesPerSecond + " msecs)");
       Log.d("Manager", "Buffer size - act: " + bufferSize + "  - (" + bufferSize * 1000 / bytesPerSecond + " msecs)");
 
@@ -65,9 +66,9 @@ public class PcmAudioSink {
       }
 
       int bufferSize = 176400;
-      setTrack(new AudioTrack(AudioManager.STREAM_MUSIC, getSampleRateInHz(), channelConfig, audioFormat, bufferSize, AudioTrack.MODE_STREAM));
-      bytesPerSecond = getTrack().getChannelCount() * getTrack().getSampleRate()
-            * (getTrack().getAudioFormat() == AudioFormat.ENCODING_PCM_16BIT ? 2 : 1);
+      track = new AudioTrack(AudioManager.STREAM_MUSIC, getSampleRateInHz(), channelConfig, audioFormat, bufferSize, AudioTrack.MODE_STREAM);
+      bytesPerSecond = track.getChannelCount() * track.getSampleRate()
+            * (track.getAudioFormat() == AudioFormat.ENCODING_PCM_16BIT ? 2 : 1);
    }
 
    byte[] getFreeBuffer(int length) {
@@ -101,7 +102,7 @@ public class PcmAudioSink {
    }
 
    void startPlay() {
-      getTrack().play();
+      track.play();
       Runnable r = new Runnable() {
          public void run() {
             while (!stop)
@@ -121,16 +122,17 @@ public class PcmAudioSink {
       long start = System.currentTimeMillis();
       byte[] buff = buffersInUse.take();
       long tage = System.currentTimeMillis();
-      result = getTrack().write(buff, 0, buff.length);
+      result = track.write(buff, 0, buff.length);
       long slut = System.currentTimeMillis();
       //Log.d("AudioTrack.write in " + (slut - tage) + " ms (wait " + (tage - start) + " ms)");
 
       buffersNotInUse.add(new SoftReference(buff));
       bytesInBuffer -= buff.length;
 
-      if (getHandler() != null && getRunWhenPcmAudioSinkWrite() != null) {
-         getHandler().post(getRunWhenPcmAudioSinkWrite());
+      if (handler != null && runWhenPcmAudioSinkWrite != null) {
+         handler.post(runWhenPcmAudioSinkWrite);
       }
+      synchronized (this) { this.notifyAll(); }
    }
 
    boolean     stop           = false;
@@ -138,21 +140,13 @@ public class PcmAudioSink {
 
    void stopPlay() {
       stop = true;
-      getTrack().release();
+      track.release();
    }
 
    public String bufferInSecs() {
       return Float.toString((10 * bytesInBuffer / bytesPerSecond) / 10f);
-
    }
 
-   public static AudioTrack getTrack() {
-      return track;
-   }
-
-   public static void setTrack(AudioTrack track) {
-      PcmAudioSink.track = track;
-   }
 
    public int getSampleRateInHz() {
       return sampleRateInHz;
@@ -163,19 +157,16 @@ public class PcmAudioSink {
       init();
    }
 
-   public Handler getHandler() {
-      return handler;
-   }
-
    public void setHandler(Handler handler) {
       this.handler = handler;
-   }
-
-   public Runnable getRunWhenPcmAudioSinkWrite() {
-      return runWhenPcmAudioSinkWrite;
    }
 
    public void setRunWhenPcmAudioSinkWrite(Runnable runWhenPcmAudioSinkWrite) {
       this.runWhenPcmAudioSinkWrite = runWhenPcmAudioSinkWrite;
    }
+
+  public AudioTrack getTrack() {
+    return track;
+  }
+
 }

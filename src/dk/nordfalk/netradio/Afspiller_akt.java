@@ -101,6 +101,7 @@ public class Afspiller_akt extends Activity implements OnClickListener {
    // private boolean spiller;
    private String                    url;
    private MediaPlayer               mp;
+   private Handler                   handler = new Handler();
    private CheckBox                  scrollCb;
    private WakeLock                  holdTelefonVågen;
    private ConnectivityManager       cm;
@@ -242,6 +243,7 @@ public class Afspiller_akt extends Activity implements OnClickListener {
             tid_førsteData = tid_spiller = 0;
             tid_brugerTrykketStart = System.currentTimeMillis();
 
+            mp.sink.setHandler(handler);
             mp.setRunWhenstreamCallback(new Runnable() {
                public void run() {
                   statusTv.setBackgroundColor(Color.RED);
@@ -273,8 +275,7 @@ public class Afspiller_akt extends Activity implements OnClickListener {
                      }
                    }
             });
-            mp.sink.setHandler(new Handler());
-            PcmAudioSink.getTrack().setPlaybackPositionUpdateListener(new OnPlaybackPositionUpdateListener() {
+            mp.sink.getTrack().setPlaybackPositionUpdateListener(new OnPlaybackPositionUpdateListener() {
                public void onMarkerReached(AudioTrack arg0) {
                   Log.d("XXXXXXXX onMarkerReached " + arg0.getPlaybackHeadPosition());
                }
@@ -282,7 +283,7 @@ public class Afspiller_akt extends Activity implements OnClickListener {
                public void onPeriodicNotification(AudioTrack arg0) {
                   Log.d("XXXXXX onPeriodicNotification ");
                }
-            }, mp.sink.getHandler());
+            }, handler);
             Log.d("XXXXXX .setPlaybackPositionUpdateListener ");
             mp.start();
 
